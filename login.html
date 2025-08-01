@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin & Psychologist Login - EDUCE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .login-body {
+            background: linear-gradient(135deg, #EDE9FE 0%, #FDF2F8 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .login-logo i {
+            font-size: 2rem;
+            color: #4F46E5;
+        }
+        
+        .login-logo span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1F2937;
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            color: #6B7280;
+            font-size: 0.9rem;
+        }
+        
+        .login-form {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #E5E7EB;
+            border-radius: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .btn-login {
+            width: 100%;
+            background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .login-links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .login-link {
+            color: #2563EB;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .login-link:hover {
+            color: #1E40AF;
+        }
+        
+        .error-message {
+            background: #FEF2F2;
+            color: #DC2626;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #FECACA;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .success-message {
+            background: #F0FDF4;
+            color: #166534;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #BBF7D0;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .back-link {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            color: #6B7280;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+        
+        .back-link:hover {
+            color: #2563EB;
+        }
+    </style>
+</head>
+<body class="login-body">
+    <a href="index.html" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Back to Main Site
+    </a>
+    
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="fas fa-brain"></i>
+                <span>EDUCE</span>
+            </div>
+            <h1 class="login-title">EDUCE Login</h1>
+            <p class="login-subtitle">Admin & Psychologist Access</p>
+        </div>
+        
+        <div id="messageContainer"></div>
+        
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-input" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+            
+            <button type="submit" class="btn-login" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </form>
+        
+        <div class="login-links">
+            <p>Don't have an account? <a href="register.html" class="login-link">Register as Psychologist</a></p>
+            <p><a href="#" class="login-link" onclick="showForgotPassword()">Forgot Password?</a></p>
+        </div>
+    </div>
+    
+    <script>
+        // Check if already logged in
+        if (localStorage.getItem('EDUCE_user')) {
+            const user = JSON.parse(localStorage.getItem('EDUCE_user'));
+            if (user.role === 'psychologist' && user.approved) {
+                window.location.href = 'psychologist.html';
+            } else if (user.role === 'admin') {
+                window.location.href = 'admin.html';
+            }
+        }
+        
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleLogin();
+        });
+        
+        function handleLogin() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // Show loading state
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            loginBtn.disabled = true;
+            
+            // Simulate login process
+            setTimeout(() => {
+                const result = authenticateUser(email, password);
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    
+                    // Store user session
+                    localStorage.setItem('EDUCE_user', JSON.stringify(result.user));
+                    
+                    // Redirect based on role
+                    setTimeout(() => {
+                        if (result.user.role === 'admin') {
+                            window.location.href = 'admin.html';
+                        } else if (result.user.role === 'psychologist' && result.user.approved) {
+                            window.location.href = 'psychologist.html';
+                        } else {
+                            showMessage('Your account is pending approval by admin.', 'error');
+                        }
+                    }, 1000);
+                } else {
+                    showMessage(result.message, 'error');
+                }
+                
+                // Reset button
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                loginBtn.disabled = false;
+            }, 1500);
+        }
+        
+        function authenticateUser(email, password) {
+            // Get registered users
+            const users = JSON.parse(localStorage.getItem('EDUCE_users') || '[]');
+            
+            // Check for admin credentials
+            if (email === 'nsuenactus@gmail.com' && password === 'nsuenactus2025') {
+                return {
+                    success: true,
+                    message: 'Welcome back, Super Admin!',
+                    user: {
+                        id: 'admin',
+                        email: 'nsuenactus@gmail.com',
+                        name: 'Super Administrator',
+                        role: 'admin',
+                        approved: true
+                    }
+                };
+            }
+            
+            // Find user
+            const user = users.find(u => u.email === email);
+            
+            if (!user) {
+                return {
+                    success: false,
+                    message: 'Invalid email or password. Please check your credentials.'
+                };
+            }
+            
+            if (user.password !== password) {
+                return {
+                    success: false,
+                    message: 'Invalid email or password. Please check your credentials.'
+                };
+            }
+            
+            if (!user.approved) {
+                return {
+                    success: false,
+                    message: 'Your account is pending approval by the administrator. Please wait for approval.'
+                };
+            }
+            
+            return {
+                success: true,
+                message: 'Login successful! Redirecting...',
+                user: user
+            };
+        }
+        
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const className = type === 'success' ? 'success-message' : 'error-message';
+            
+            container.innerHTML = `<div class="${className}">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                ${message}
+            </div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 3000);
+            }
+        }
+        
+        function showForgotPassword() {
+            alert('Please contact administrator at nsuenactus@gmail.com to reset your password.');
+        }
+    </script>
+</body>
+</html> 

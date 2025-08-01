@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Registration - EDUCE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .register-body {
+            background: linear-gradient(135deg, #EDE9FE 0%, #FDF2F8 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .register-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .register-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .register-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .register-logo i {
+            font-size: 2rem;
+            color: #4F46E5;
+        }
+        
+        .register-logo span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1F2937;
+        }
+        
+        .register-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .register-subtitle {
+            color: #6B7280;
+            font-size: 0.9rem;
+        }
+        
+        .form-section {
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #E5E7EB;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #E5E7EB;
+            border-radius: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .required {
+            color: #DC2626;
+        }
+        
+        .btn-register {
+            width: 100%;
+            background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+        
+        .btn-register:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-register:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .register-links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .register-link {
+            color: #2563EB;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .register-link:hover {
+            color: #1E40AF;
+        }
+        
+        .error-message {
+            background: #FEF2F2;
+            color: #DC2626;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #FECACA;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .success-message {
+            background: #F0FDF4;
+            color: #166534;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #BBF7D0;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .back-link {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            color: #6B7280;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+        
+        .back-link:hover {
+            color: #2563EB;
+        }
+        
+        .info-box {
+            background: #F0F9FF;
+            border: 1px solid #BAE6FD;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-box h4 {
+            color: #0369A1;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .info-box p {
+            color: #075985;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+        
+        .child-section {
+            background: #F9FAFB;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 2px dashed #D1D5DB;
+        }
+        
+        .add-child-btn {
+            background: #10B981;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+        
+        .add-child-btn:hover {
+            background: #059669;
+        }
+        
+        .child-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #E5E7EB;
+        }
+        
+        .remove-child-btn {
+            background: #EF4444;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            float: right;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .register-container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body class="register-body">
+    <a href="customer-login.html" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Back to Login
+    </a>
+    
+    <div class="register-container">
+        <div class="register-header">
+            <div class="register-logo">
+                <i class="fas fa-brain"></i>
+                <span>EDUCE</span>
+            </div>
+            <h1 class="register-title">Create Your Account</h1>
+            <p class="register-subtitle">Start your child's journey to discovering their potential</p>
+        </div>
+        
+        <div class="info-box">
+            <h4><i class="fas fa-info-circle"></i> Welcome to EDUCE</h4>
+            <p>Create your family account to access professional psychological testing and AI-powered career guidance for your children.</p>
+        </div>
+        
+        <div id="messageContainer"></div>
+        
+        <form class="register-form" id="registerForm">
+            <!-- Parent Information -->
+            <div class="form-section">
+                <h3 class="section-title">Parent/Guardian Information</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name <span class="required">*</span></label>
+                        <input type="text" id="firstName" name="firstName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name <span class="required">*</span></label>
+                        <input type="text" id="lastName" name="lastName" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span class="required">*</span></label>
+                        <input type="tel" id="phone" name="phone" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Password <span class="required">*</span></label>
+                        <input type="password" id="password" name="password" class="form-input" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" required minlength="6">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Children Information -->
+            <div class="form-section">
+                <h3 class="section-title">Children Information</h3>
+                <p style="color: #6B7280; font-size: 0.875rem; margin-bottom: 1rem;">Add your children who will take psychological assessments</p>
+                
+                <div class="child-section">
+                    <div id="childrenContainer">
+                        <div class="child-item" data-child="0">
+                            <button type="button" class="remove-child-btn" onclick="removeChild(0)" style="display: none;">Remove</button>
+                            <h4 style="margin-bottom: 1rem; color: #374151;">Child #1</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Child's Name <span class="required">*</span></label>
+                                    <input type="text" name="children[0][name]" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Age <span class="required">*</span></label>
+                                    <input type="number" name="children[0][age]" class="form-input" min="4" max="18" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Gender <span class="required">*</span></label>
+                                    <select name="children[0][gender]" class="form-select" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Grade/Class</label>
+                                    <input type="text" name="children[0][grade]" class="form-input" placeholder="e.g., 3rd Grade">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Special Notes (Optional)</label>
+                                <textarea name="children[0][notes]" class="form-textarea" placeholder="Any special considerations or notes about your child..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="add-child-btn" onclick="addChild()">
+                        <i class="fas fa-plus"></i> Add Another Child
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="form-section">
+                <h3 class="section-title">Contact Information</h3>
+                
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" class="form-input" placeholder="Street address">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <input type="text" id="country" name="country" class="form-input" value="Azerbaijan">
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-register" id="registerBtn">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+        </form>
+        
+        <div class="register-links">
+            <p>Already have an account? <a href="customer-login.html" class="register-link">Login here</a></p>
+            <p>Are you a psychologist? <a href="register.html" class="register-link">Register as Professional</a></p>
+        </div>
+    </div>
+    
+    <script>
+        let childCounter = 1;
+        
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleRegistration();
+        });
+        
+        function addChild() {
+            const container = document.getElementById('childrenContainer');
+            const childItem = document.createElement('div');
+            childItem.className = 'child-item';
+            childItem.setAttribute('data-child', childCounter);
+            
+            childItem.innerHTML = `
+                <button type="button" class="remove-child-btn" onclick="removeChild(${childCounter})">Remove</button>
+                <h4 style="margin-bottom: 1rem; color: #374151;">Child #${childCounter + 1}</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Child's Name <span class="required">*</span></label>
+                        <input type="text" name="children[${childCounter}][name]" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Age <span class="required">*</span></label>
+                        <input type="number" name="children[${childCounter}][age]" class="form-input" min="4" max="18" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Gender <span class="required">*</span></label>
+                        <select name="children[${childCounter}][gender]" class="form-select" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Grade/Class</label>
+                        <input type="text" name="children[${childCounter}][grade]" class="form-input" placeholder="e.g., 3rd Grade">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Special Notes (Optional)</label>
+                    <textarea name="children[${childCounter}][notes]" class="form-textarea" placeholder="Any special considerations or notes about your child..."></textarea>
+                </div>
+            `;
+            
+            container.appendChild(childItem);
+            childCounter++;
+            
+            // Show remove button for first child if there are multiple children
+            if (childCounter > 1) {
+                const firstChild = document.querySelector('[data-child="0"] .remove-child-btn');
+                firstChild.style.display = 'inline-block';
+            }
+        }
+        
+        function removeChild(index) {
+            const childItem = document.querySelector(`[data-child="${index}"]`);
+            childItem.remove();
+            
+            // Hide remove button for first child if only one remains
+            const remainingChildren = document.querySelectorAll('.child-item');
+            if (remainingChildren.length === 1) {
+                const firstChild = document.querySelector('[data-child="0"] .remove-child-btn');
+                if (firstChild) firstChild.style.display = 'none';
+            }
+            
+            // Renumber children
+            updateChildNumbers();
+        }
+        
+        function updateChildNumbers() {
+            const children = document.querySelectorAll('.child-item');
+            children.forEach((child, index) => {
+                const title = child.querySelector('h4');
+                title.textContent = `Child #${index + 1}`;
+            });
+        }
+        
+        function handleRegistration() {
+            const formData = new FormData(document.getElementById('registerForm'));
+            const registerBtn = document.getElementById('registerBtn');
+            
+            // Get basic form data
+            const data = {
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                password: formData.get('password'),
+                confirmPassword: formData.get('confirmPassword'),
+                address: formData.get('address'),
+                city: formData.get('city'),
+                country: formData.get('country')
+            };
+            
+            // Validate passwords match
+            if (data.password !== data.confirmPassword) {
+                showMessage('Passwords do not match!', 'error');
+                return;
+            }
+            
+            // Collect children data
+            const children = [];
+            const childItems = document.querySelectorAll('.child-item');
+            
+            childItems.forEach((item, index) => {
+                const name = item.querySelector(`input[name="children[${item.dataset.child}][name]"]`).value;
+                const age = item.querySelector(`input[name="children[${item.dataset.child}][age]"]`).value;
+                const gender = item.querySelector(`select[name="children[${item.dataset.child}][gender]"]`).value;
+                const grade = item.querySelector(`input[name="children[${item.dataset.child}][grade]"]`).value;
+                const notes = item.querySelector(`textarea[name="children[${item.dataset.child}][notes]"]`).value;
+                
+                if (name && age && gender) {
+                    children.push({
+                        name: name,
+                        age: parseInt(age),
+                        gender: gender,
+                        grade: grade,
+                        notes: notes,
+                        id: Date.now() + index // Unique ID for each child
+                    });
+                }
+            });
+            
+            if (children.length === 0) {
+                showMessage('Please add at least one child to continue.', 'error');
+                return;
+            }
+            
+            // Check if email already exists
+            const customers = JSON.parse(localStorage.getItem('EDUCE_customers') || '[]');
+            if (customers.find(c => c.email === data.email)) {
+                showMessage('An account with this email already exists!', 'error');
+                return;
+            }
+            
+            // Show loading state
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+            registerBtn.disabled = true;
+            
+            // Simulate registration process
+            setTimeout(() => {
+                // Create customer object
+                const newCustomer = {
+                    id: Date.now().toString(),
+                    email: data.email,
+                    password: data.password,
+                    name: `${data.firstName} ${data.lastName}`,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    phone: data.phone,
+                    address: data.address,
+                    city: data.city,
+                    country: data.country,
+                    children: children,
+                    role: 'customer',
+                    registeredAt: new Date().toISOString()
+                };
+                
+                // Save to localStorage
+                customers.push(newCustomer);
+                localStorage.setItem('EDUCE_customers', JSON.stringify(customers));
+                
+                // Show success message
+                showMessage('Account created successfully! You can now login and start your child\'s assessment journey.', 'success');
+                
+                // Reset form
+                document.getElementById('registerForm').reset();
+                
+                // Redirect to login after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'customer-login.html';
+                }, 2000);
+                
+                // Reset button
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                registerBtn.disabled = false;
+            }, 2000);
+        }
+        
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const className = type === 'success' ? 'success-message' : 'error-message';
+            
+            container.innerHTML = `<div class="${className}">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                ${message}
+            </div>`;
+            
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html> 

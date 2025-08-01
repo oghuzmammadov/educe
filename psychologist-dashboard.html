@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psychologist Dashboard - EDUCE</title>
+    <meta name="description" content="Professional dashboard for psychologists to analyze children's test results and generate AI-powered career guidance reports.">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body class="dashboard-body">
+    <!-- Navigation Header -->
+    <header class="dashboard-header">
+        <nav class="nav container">
+            <div class="nav-brand">
+                <i class="fas fa-brain brand-icon"></i>
+                <span class="brand-text">EDUCE</span>
+                <span class="dashboard-badge">Psychologist Dashboard</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#children" class="nav-link active">Children</a>
+                <a href="#new-assessment" class="nav-link">New Assessment</a>
+                <a href="#reports" class="nav-link">Reports</a>
+                <a href="#profile" class="nav-link">Profile</a>
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Dashboard Stats -->
+            <section class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">47</h3>
+                        <p class="stat-label">Total Children</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">12</h3>
+                        <p class="stat-label">Pending Assessments</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">35</h3>
+                        <p class="stat-label">Completed Reports</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">95%</h3>
+                        <p class="stat-label">AI Accuracy</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="quick-actions">
+                <h2 class="section-title">Quick Actions</h2>
+                <div class="action-cards">
+                    <div class="action-card" onclick="showNewAssessmentForm()">
+                        <i class="fas fa-plus-circle"></i>
+                        <h3>New Assessment</h3>
+                        <p>Start a new psychological assessment for a child</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="showAIAnalysis()">
+                        <i class="fas fa-brain"></i>
+                        <h3>AI Analysis</h3>
+                        <p>Generate AI-powered career guidance report</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="showReports()">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>View Reports</h3>
+                        <p>Access completed assessment reports</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="showChildrenList()">
+                        <i class="fas fa-list"></i>
+                        <h3>Children List</h3>
+                        <p>View all registered children and their progress</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Content Area -->
+            <section class="main-content">
+                <!-- Children List Section -->
+                <div id="children-section" class="content-section active">
+                    <div class="section-header">
+                        <h2>Children Overview</h2>
+                        <button class="btn btn-primary" onclick="showNewAssessmentForm()">
+                            <i class="fas fa-plus"></i> Add New Child
+                        </button>
+                    </div>
+                    
+                    <div class="children-table">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Last Assessment</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="children-tbody">
+                                <tr>
+                                    <td>
+                                        <div class="child-info">
+                                            <div class="child-avatar">AH</div>
+                                            <span>Ayşe Həsənova</span>
+                                        </div>
+                                    </td>
+                                    <td>8 years</td>
+                                    <td>Dec 15, 2024</td>
+                                    <td><span class="status completed">Completed</span></td>
+                                    <td>
+                                        <button class="btn-icon" onclick="viewChildDetails(1)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-icon" onclick="generateReport(1)">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="child-info">
+                                            <div class="child-avatar">RM</div>
+                                            <span>Rəşad Məmmədov</span>
+                                        </div>
+                                    </td>
+                                    <td>10 years</td>
+                                    <td>Dec 12, 2024</td>
+                                    <td><span class="status pending">Pending</span></td>
+                                    <td>
+                                        <button class="btn-icon" onclick="viewChildDetails(2)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-icon" onclick="continueAssessment(2)">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="child-info">
+                                            <div class="child-avatar">LQ</div>
+                                            <span>Leyla Qasımova</span>
+                                        </div>
+                                    </td>
+                                    <td>9 years</td>
+                                    <td>Dec 10, 2024</td>
+                                    <td><span class="status completed">Completed</span></td>
+                                    <td>
+                                        <button class="btn-icon" onclick="viewChildDetails(3)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-icon" onclick="generateReport(3)">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- New Assessment Section -->
+                <div id="assessment-section" class="content-section">
+                    <div class="section-header">
+                        <h2>New Psychological Assessment</h2>
+                        <p>Enter child information and test results for AI analysis</p>
+                    </div>
+                    
+                    <form class="assessment-form" id="assessmentForm">
+                        <!-- Child Information -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-user"></i> Child Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="childName">Full Name</label>
+                                    <input type="text" id="childName" name="childName" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="childAge">Age</label>
+                                    <input type="number" id="childAge" name="childAge" min="5" max="18" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="childGender">Gender</label>
+                                    <select id="childGender" name="childGender" required>
+                                        <option value="">Select...</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="grade">Grade Level</label>
+                                    <input type="text" id="grade" name="grade" placeholder="e.g., 3rd Grade">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cognitive Assessment -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-brain"></i> Cognitive Assessment Scores</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="iqScore">IQ Score</label>
+                                    <input type="number" id="iqScore" name="iqScore" min="50" max="200">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="verbalReasoning">Verbal Reasoning (1-10)</label>
+                                    <input type="number" id="verbalReasoning" name="verbalReasoning" min="1" max="10">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="numericalReasoning">Numerical Reasoning (1-10)</label>
+                                    <input type="number" id="numericalReasoning" name="numericalReasoning" min="1" max="10">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="spatialReasoning">Spatial Reasoning (1-10)</label>
+                                    <input type="number" id="spatialReasoning" name="spatialReasoning" min="1" max="10">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="memoryScore">Working Memory (1-10)</label>
+                                    <input type="number" id="memoryScore" name="memoryScore" min="1" max="10">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="processingSpeed">Processing Speed (1-10)</label>
+                                    <input type="number" id="processingSpeed" name="processingSpeed" min="1" max="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Personality Assessment -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-heart"></i> Personality Traits</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="extroversion">Extroversion (1-10)</label>
+                                    <input type="number" id="extroversion" name="extroversion" min="1" max="10">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="conscientiousness">Conscientiousness (1-10)</label>
+                                    <input type="number" id="conscientiousness" name="conscientiousness" min="1" max="10">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="openness">Openness to Experience (1-10)</label>
+                                    <input type="number" id="openness" name="openness" min="1" max="10">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="agreeableness">Agreeableness (1-10)</label>
+                                    <input type="number" id="agreeableness" name="agreeableness" min="1" max="10">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="emotionalStability">Emotional Stability (1-10)</label>
+                                    <input type="number" id="emotionalStability" name="emotionalStability" min="1" max="10">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="creativity">Creativity (1-10)</label>
+                                    <input type="number" id="creativity" name="creativity" min="1" max="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interests & Preferences -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-star"></i> Interests & Preferences</h3>
+                            <div class="interests-grid">
+                                <label class="interest-checkbox">
+                                    <input type="checkbox" name="interests" value="science">
+                                    <span class="checkmark"></span>
+                                    Science & Research
+                                </label>
+                                
+                                <label class="interest-checkbox">
+                                    <input type="checkbox" name="interests" value="technology">
+                                    <span class="checkmark"></span>
+                                    Technology & Programming
+                                </label>
+                                
+                                <label class="interest-checkbox">
+                                    <input type="checkbox" name="interests" value="arts">
+                                    <span class="checkmark"></span>
+                                    Arts & Design
+                                </label>
+                                
+                                <label class="interest-checkbox">
+                                    <input type="checkbox" name="interests" value="music">
+                                    <span class="checkmark"></span>
+                                    Music & Performance
+                                </label>
+                                
+                                <label class="interest-checkbox">
+                                    <input type="checkbox" name="interests" value="sports">
+                                    <span class="checkmark"></span>
+                                    Sports & Physical Activity
+                                </label>
+                                
+                                <label class="interest-checkbox">
+                                    <input type="checkbox" name="interests" value="literature">
+                                    <span class="checkmark"></span>
+                                    Literature & Writing
+                                </label>
+                                
+                                <label class="interest-checkbox">
+                                    <input type="checkbox" name="interests" value="mathematics">
+                                    <span class="checkmark"></span>
+                                    Mathematics
+                                </label>
+                                
+                                <label class="interest-checkbox">
+                                    <input type="checkbox" name="interests" value="social">
+                                    <span class="checkmark"></span>
+                                    Social Work & Helping
+                                </label>
+                                
+                                <label class="interest-checkbox">
+                                    <input type="checkbox" name="interests" value="business">
+                                    <span class="checkmark"></span>
+                                    Business & Leadership
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-notes-medical"></i> Professional Notes</h3>
+                            <div class="form-group">
+                                <label for="observations">Behavioral Observations</label>
+                                <textarea id="observations" name="observations" rows="4" 
+                                         placeholder="Enter your professional observations about the child's behavior, learning style, strengths, and areas for improvement..."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="recommendations">Initial Recommendations</label>
+                                <textarea id="recommendations" name="recommendations" rows="3" 
+                                         placeholder="Any preliminary recommendations or areas to focus on..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="saveAsDraft()">
+                                <i class="fas fa-save"></i> Save as Draft
+                            </button>
+                            
+                            <button type="submit" class="btn btn-primary btn-large">
+                                <i class="fas fa-robot"></i> Generate AI Analysis
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- AI Report Section -->
+                <div id="report-section" class="content-section">
+                    <div class="section-header">
+                        <h2>AI-Generated Career Guidance Report</h2>
+                        <div class="report-actions">
+                            <button class="btn btn-secondary" onclick="downloadReport()">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
+                            <button class="btn btn-primary" onclick="emailReport()">
+                                <i class="fas fa-envelope"></i> Email to Parents
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="report-container" id="reportContainer">
+                        <!-- Report content will be dynamically generated -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="loading-spinner">
+                <i class="fas fa-robot fa-spin"></i>
+            </div>
+            <h3>AI is analyzing the data...</h3>
+            <p>This may take a few moments. Please wait while our AI generates the career guidance report.</p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html> 

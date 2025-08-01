@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psychologist Dashboard - EDUCE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .dashboard-body { background: #f8fafc; min-height: 100vh; }
+        .dashboard-header { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .dashboard-badge { background: #2563EB; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-left: 10px; }
+        .dashboard-main { padding: 2rem 0; }
+        .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+        .stat-card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 1rem; }
+        .stat-icon { width: 60px; height: 60px; background: linear-gradient(135deg, #2563EB, #3B82F6); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; }
+        .stat-number { font-size: 2rem; font-weight: 700; color: #1F2937; margin-bottom: 0.25rem; }
+        .stat-label { color: #6B7280; margin: 0; font-size: 0.9rem; }
+        .assessment-section { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        .form-section { margin-bottom: 2rem; }
+        .form-section h3 { display: flex; align-items: center; gap: 0.5rem; color: #1F2937; margin-bottom: 1rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem; border: 2px solid #E5E7EB; border-radius: 0.5rem; font-family: Inter; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #2563EB; }
+        .interests-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .interest-checkbox { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: #F9FAFB; border-radius: 0.5rem; cursor: pointer; }
+        .interest-checkbox input { width: auto; margin: 0; }
+        .form-actions { display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; }
+        .report-section { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .report-container { background: #F9FAFB; padding: 2rem; border-radius: 0.5rem; margin-top: 1rem; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            animation: modalSlideIn 0.3s ease;
+        }
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #1F2937;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6B7280;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+        }
+        .modal-close:hover {
+            background: #F3F4F6;
+        }
+        .modal-body {
+            padding: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .form-group small {
+            color: #6B7280;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+        .form-group small a {
+            color: #2563EB;
+            text-decoration: none;
+        }
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #E5E7EB;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0 0.5rem 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2563EB, #3B82F6);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        #progressText {
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        .api-status.connected {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        .api-status.disconnected {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+        .config-btn {
+            background: transparent;
+            border: 1px solid #D1D5DB;
+            color: #374151;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .config-btn:hover {
+            background: #F3F4F6;
+            border-color: #2563EB;
+        }
+        .loading-spinner { font-size: 3rem; color: #2563EB; margin-bottom: 1rem; }
+        .career-recommendation { background: white; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1rem; border-left: 4px solid #2563EB; }
+        .strength-item { background: #EBF8FF; padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <header class="dashboard-header">
+        <nav class="nav container">
+            <div class="nav-brand">
+                <i class="fas fa-brain brand-icon"></i>
+                <span class="brand-text">EDUCE</span>
+                <span class="dashboard-badge">Psychologist Dashboard</span>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Back to Main Site</a>
+                <button class="btn btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Stats -->
+            <section class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="totalChildren">0</h3>
+                        <p class="stat-label">Total Children</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-clipboard-check"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="pendingAssessments">0</h3>
+                        <p class="stat-label">Pending Assessments</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="completedReports">0</h3>
+                        <p class="stat-label">Completed Reports</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-robot"></i></div>
+                    <div class="stat-content">
+                        <h3 class="stat-number" id="aiAccuracy">95%</h3>
+                        <p class="stat-label">AI Accuracy</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Psychologist Profile -->
+            <section class="profile-section" style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2><i class="fas fa-user-md"></i> Mənim Profilim</h2>
+                    <button class="btn btn-primary" onclick="editPsychologistProfile()">
+                        <i class="fas fa-edit"></i> Profili Redaktə Et
+                    </button>
+                </div>
+                
+                <div class="profile-content" id="profileContent">
+                    <div style="text-align: center; padding: 3rem; color: #6B7280;">
+                        <i class="fas fa-user-circle" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>Profil məlumatları yüklənir...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pending Requests -->
+            <section class="pending-requests-section" style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>Assessment Requests</h2>
+                    <button class="btn btn-secondary" onclick="refreshRequests()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                
+                <div class="requests-table" id="requestsTable">
+                    <div style="text-align: center; padding: 3rem; color: #6B7280;">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>No pending requests. New assessment requests will appear here.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Game Results -->
+            <section class="game-results-section" style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>Interactive Assessment Results</h2>
+                    <button class="btn btn-secondary" onclick="refreshGameResults()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                
+                <div class="game-results-table" id="gameResultsTable">
+                    <div style="text-align: center; padding: 3rem; color: #6B7280;">
+                        <i class="fas fa-gamepad" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>No completed assessments yet. Game results will appear here after children complete their interactive tests.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Children List -->
+            <section class="children-section" style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>Registered Children</h2>
+                    <button class="btn btn-primary" onclick="showAssessmentForm()">
+                        <i class="fas fa-plus"></i> Add New Assessment
+                    </button>
+                </div>
+                
+                <div class="children-table" id="childrenTable">
+                    <div style="text-align: center; padding: 3rem; color: #6B7280;">
+                        <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>No children registered yet. Create your first assessment to get started.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Assessment Form -->
+            <section class="assessment-section" id="assessmentSection">
+                <h2>New Psychological Assessment</h2>
+                <p>Enter child information and test results for AI analysis</p>
+                
+                <form id="assessmentForm">
+                    <!-- Child Info -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-user"></i> Child Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="childName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" id="childAge" min="5" max="18" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select id="childGender" required>
+                                    <option value="">Select...</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Grade Level</label>
+                                <input type="text" id="grade" placeholder="e.g., 3rd Grade">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cognitive Scores -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-brain"></i> Cognitive Assessment</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>IQ Score</label>
+                                <input type="number" id="iqScore" min="50" max="200">
+                            </div>
+                            <div class="form-group">
+                                <label>Verbal Reasoning (1-10)</label>
+                                <input type="number" id="verbalReasoning" min="1" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Numerical Reasoning (1-10)</label>
+                                <input type="number" id="numericalReasoning" min="1" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Spatial Reasoning (1-10)</label>
+                                <input type="number" id="spatialReasoning" min="1" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Working Memory (1-10)</label>
+                                <input type="number" id="memoryScore" min="1" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Processing Speed (1-10)</label>
+                                <input type="number" id="processingSpeed" min="1" max="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personality -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-heart"></i> Personality Traits</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Extroversion (1-10)</label>
+                                <input type="number" id="extroversion" min="1" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Conscientiousness (1-10)</label>
+                                <input type="number" id="conscientiousness" min="1" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Openness (1-10)</label>
+                                <input type="number" id="openness" min="1" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Creativity (1-10)</label>
+                                <input type="number" id="creativity" min="1" max="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interests -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-star"></i> Interests</h3>
+                        <div class="interests-grid">
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="science">
+                                <span>Science & Research</span>
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="technology">
+                                <span>Technology</span>
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="arts">
+                                <span>Arts & Design</span>
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="music">
+                                <span>Music</span>
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="sports">
+                                <span>Sports</span>
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="mathematics">
+                                <span>Mathematics</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-notes-medical"></i> Professional Notes</h3>
+                        <div class="form-group">
+                            <label>Behavioral Observations</label>
+                            <textarea id="observations" rows="4" placeholder="Enter your observations..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <i class="fas fa-robot"></i> Generate AI Analysis
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Report Section -->
+            <section class="report-section" id="reportSection" style="display:none;">
+                <div class="section-header">
+                    <h2>AI-Generated Career Guidance Report</h2>
+                    <div style="display:flex; gap:1rem;">
+                        <button class="btn btn-secondary" onclick="downloadReport()">
+                            <i class="fas fa-download"></i> Download PDF
+                        </button>
+                        <button class="btn btn-primary" onclick="emailReport()">
+                            <i class="fas fa-envelope"></i> Email to Parents
+                        </button>
+                    </div>
+                </div>
+                <div class="report-container" id="reportContainer"></div>
+            </section>
+        </div>
+    </main>
+
+    <!-- API Configuration Modal -->
+    <div id="apiConfigModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-cog"></i> API Configuration</h3>
+                <button class="modal-close" onclick="closeApiConfig()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="geminiApiKey">Google Gemini API Key</label>
+                    <input type="password" id="geminiApiKey" placeholder="Enter your Gemini API key">
+                    <small>Your API key is stored locally and never shared. <a href="https://makersuite.google.com/app/apikey" target="_blank">Get API Key</a></small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeApiConfig()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveApiKey()">Save Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Edit Modal -->
+    <div id="profileEditModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> Profili Redaktə Et</h3>
+                <button class="modal-close" onclick="closeProfileEdit()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="profileEditForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="psychName">Ad Soyad</label>
+                            <input type="text" id="psychName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="psychTitle">Peşə Başlığı</label>
+                            <input type="text" id="psychTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="psychExperience">Təcrübə</label>
+                            <input type="text" id="psychExperience" placeholder="8 years">
+                        </div>
+                        <div class="form-group">
+                            <label for="psychAvailable">Mövcudluq</label>
+                            <select id="psychAvailable">
+                                <option value="true">Mövcud</option>
+                                <option value="false">Mövcud deyil</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="psychSpecializations">İxtisaslar (vergüllə ayırın)</label>
+                        <input type="text" id="psychSpecializations" placeholder="Child Development, Learning Disabilities, ADHD">
+                    </div>
+                    <div class="form-group">
+                        <label for="psychDescription">Təsvir</label>
+                        <textarea id="psychDescription" rows="4" placeholder="Professional description..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeProfileEdit()">Ləğv Et</button>
+                        <button type="submit" class="btn btn-primary">Yadda Saxla</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="loading-spinner">
+                <i class="fas fa-robot fa-spin"></i>
+            </div>
+            <h3>AI is analyzing the data...</h3>
+            <p>Please wait while our AI generates the career guidance report.</p>
+            <div id="loadingProgress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span id="progressText">Initializing AI analysis...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        const currentUser = JSON.parse(localStorage.getItem('EDUCE_user') || '{}');
+        console.log('Psixoloq paneli - Cari istifadəçi:', currentUser);
+        
+        if (!currentUser.role || currentUser.role !== 'psychologist') {
+            alert('Giriş rədd edildi. Lütfən psixoloq hesabınızla daxil olun.');
+            window.location.href = 'login.html';
+        } else if (!currentUser.approved) {
+            alert('Hesabınız hələ təsdiqlənməmişdir. Admin tərəfindən təsdiq gözlənilir.');
+            window.location.href = 'login.html';
+        }
+        
+        // Global variables
+        let children = [];
+        let currentEditingId = null;
+        let geminiApiKey = localStorage.getItem('EDUCE_gemini_api_key') || '';
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePsychologistInfo();
+            loadPsychologistProfile();
+            loadChildrenData();
+            updateDashboardStats();
+            renderChildrenTable();
+            checkApiKeyStatus();
+        });
+        
+        // Update psychologist info in header
+        function updatePsychologistInfo() {
+            const navBrand = document.querySelector('.nav-brand');
+            if (navBrand && currentUser.name) {
+                // Update the badge to show psychologist name
+                const badge = navBrand.querySelector('.dashboard-badge');
+                if (badge) {
+                    badge.innerHTML = `<i class="fas fa-user-md"></i> Dr. ${currentUser.name}`;
+                }
+            }
+            
+            // Update document title
+            if (currentUser.name) {
+                document.title = `Dr. ${currentUser.name} - EDUCE Dashboard`;
+            }
+        }
+        
+        // API Key Management
+        function checkApiKeyStatus() {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `api-status ${geminiApiKey ? 'connected' : 'disconnected'}`;
+            statusDiv.innerHTML = `
+                <i class="fas fa-${geminiApiKey ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${geminiApiKey ? 'Gemini AI Connected' : 'Gemini AI Not Configured'}</span>
+                <button class="config-btn" onclick="showApiConfig()">
+                    <i class="fas fa-cog"></i> Configure
+                </button>
+            `;
+            
+            const assessmentSection = document.getElementById('assessmentSection');
+            if (assessmentSection && !document.querySelector('.api-status')) {
+                assessmentSection.insertBefore(statusDiv, assessmentSection.firstChild);
+            }
+        }
+
+        function showApiConfig() {
+            document.getElementById('geminiApiKey').value = geminiApiKey;
+            document.getElementById('apiConfigModal').style.display = 'block';
+        }
+
+        function closeApiConfig() {
+            document.getElementById('apiConfigModal').style.display = 'none';
+        }
+
+        function saveApiKey() {
+            const apiKey = document.getElementById('geminiApiKey').value.trim();
+            if (apiKey) {
+                geminiApiKey = apiKey;
+                localStorage.setItem('EDUCE_gemini_api_key', apiKey);
+                alert('API key saved successfully!');
+                closeApiConfig();
+                checkApiKeyStatus();
+            } else {
+                alert('Please enter a valid API key.');
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            if (confirm('Çıxış etmək istədiyinizə əminsiniz?')) {
+                // Clear all user data
+                localStorage.removeItem('EDUCE_user');
+                localStorage.removeItem('EDUCE_token');
+                localStorage.removeItem('EDUCE_gemini_api_key');
+                
+                // Show logout message
+                const logoutMessage = document.createElement('div');
+                logoutMessage.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: #10B981;
+                    color: white;
+                    padding: 2rem 3rem;
+                    border-radius: 1rem;
+                    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+                    z-index: 10000;
+                    font-weight: 500;
+                    text-align: center;
+                `;
+                logoutMessage.innerHTML = `
+                    <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                    <p style="margin: 0;">Uğurla çıxış edildi!</p>
+                `;
+                document.body.appendChild(logoutMessage);
+                
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            }
+        }
+
+        // Form submission handler
+        document.getElementById('assessmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!geminiApiKey) {
+                alert('Please configure your Gemini API key first.');
+                showApiConfig();
+                return;
+            }
+            
+            generateAIReport();
+        });
+
+        // Load children data from localStorage
+        function loadChildrenData() {
+            const savedData = localStorage.getItem('EDUCE_children');
+            if (savedData) {
+                children = JSON.parse(savedData);
+            }
+        }
+
+        // Save children data to localStorage
+        function saveChildrenData() {
+            localStorage.setItem('EDUCE_children', JSON.stringify(children));
+        }
+
+        // Update dashboard statistics
+        function updateDashboardStats() {
+            const totalChildren = children.length;
+            const completedReports = children.filter(child => child.reportGenerated).length;
+            const pendingAssessments = totalChildren - completedReports;
+
+            document.getElementById('totalChildren').textContent = totalChildren;
+            document.getElementById('pendingAssessments').textContent = pendingAssessments;
+            document.getElementById('completedReports').textContent = completedReports;
+        }
+
+        // Render children table
+        function renderChildrenTable() {
+            const tableContainer = document.getElementById('childrenTable');
+            
+            if (children.length === 0) {
+                tableContainer.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #6B7280;">
+                        <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>No children registered yet. Create your first assessment to get started.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #F9FAFB; border-bottom: 2px solid #E5E7EB;">
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: #374151;">Name</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: #374151;">Age</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: #374151;">Assessment Date</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: #374151;">Status</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: #374151;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            children.forEach((child, index) => {
+                const statusBadge = child.reportGenerated 
+                    ? '<span style="background: #10B981; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.875rem;">Completed</span>'
+                    : '<span style="background: #F59E0B; color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.875rem;">Pending</span>';
+
+                tableHTML += `
+                    <tr style="border-bottom: 1px solid #E5E7EB;">
+                        <td style="padding: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #4F46E5, #7C3AED); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">
+                                    ${child.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                </div>
+                                <span style="font-weight: 500; color: #1F2937;">${child.name}</span>
+                            </div>
+                        </td>
+                        <td style="padding: 1rem; color: #6B7280;">${child.age} years</td>
+                        <td style="padding: 1rem; color: #6B7280;">${new Date(child.assessmentDate).toLocaleDateString()}</td>
+                        <td style="padding: 1rem;">${statusBadge}</td>
+                        <td style="padding: 1rem;">
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="viewChild(${index})" style="background: #3B82F6; color: white; border: none; padding: 0.5rem; border-radius: 0.5rem; cursor: pointer;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${child.reportGenerated ? 
+                                    `<button onclick="viewReport(${index})" style="background: #10B981; color: white; border: none; padding: 0.5rem; border-radius: 0.5rem; cursor: pointer;">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </button>` :
+                                    `<button onclick="editChild(${index})" style="background: #F59E0B; color: white; border: none; padding: 0.5rem; border-radius: 0.5rem; cursor: pointer;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>`
+                                }
+                                <button onclick="deleteChild(${index})" style="background: #EF4444; color: white; border: none; padding: 0.5rem; border-radius: 0.5rem; cursor: pointer;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            tableContainer.innerHTML = tableHTML;
+        }
+
+        // Show assessment form
+        function showAssessmentForm() {
+            document.getElementById('assessmentSection').scrollIntoView({ behavior: 'smooth' });
+            currentEditingId = null;
+            document.getElementById('assessmentForm').reset();
+        }
+
+        // Edit child data
+        function editChild(index) {
+            const child = children[index];
+            currentEditingId = index;
+            
+            // Fill form with existing data
+            document.getElementById('childName').value = child.name;
+            document.getElementById('childAge').value = child.age;
+            document.getElementById('childGender').value = child.gender;
+            document.getElementById('grade').value = child.grade || '';
+            document.getElementById('iqScore').value = child.iq || '';
+            document.getElementById('verbalReasoning').value = child.verbal || '';
+            document.getElementById('numericalReasoning').value = child.numerical || '';
+            document.getElementById('spatialReasoning').value = child.spatial || '';
+            document.getElementById('memoryScore').value = child.memory || '';
+            document.getElementById('processingSpeed').value = child.processing || '';
+            document.getElementById('extroversion').value = child.extroversion || '';
+            document.getElementById('conscientiousness').value = child.conscientiousness || '';
+            document.getElementById('openness').value = child.openness || '';
+            document.getElementById('creativity').value = child.creativity || '';
+            document.getElementById('observations').value = child.observations || '';
+            
+            // Set interests checkboxes
+            const interestCheckboxes = document.querySelectorAll('input[name="interests"]');
+            interestCheckboxes.forEach(checkbox => {
+                checkbox.checked = child.interests && child.interests.includes(checkbox.value);
+            });
+            
+            // Scroll to form
+            showAssessmentForm();
+        }
+
+        // View child details
+        function viewChild(index) {
+            const child = children[index];
+            alert(`Child Details:\n\nName: ${child.name}\nAge: ${child.age}\nGender: ${child.gender}\nAssessment Date: ${new Date(child.assessmentDate).toLocaleDateString()}\nStatus: ${child.reportGenerated ? 'Completed' : 'Pending'}`);
+        }
+
+        // View report
+        function viewReport(index) {
+            const child = children[index];
+            if (child.report) {
+                document.getElementById('reportContainer').innerHTML = child.report;
+                document.getElementById('reportSection').style.display = 'block';
+                document.getElementById('reportSection').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Delete child
+        function deleteChild(index) {
+            if (confirm('Are you sure you want to delete this child\'s data? This action cannot be undone.')) {
+                children.splice(index, 1);
+                saveChildrenData();
+                updateDashboardStats();
+                renderChildrenTable();
+            }
+        }
+
+        async function generateAIReport() {
+            // Show loading modal
+            document.getElementById('loadingModal').style.display = 'block';
+            updateProgress(10, 'Collecting assessment data...');
+            
+            // Collect form data
+            const data = {
+                id: Date.now(), // Unique ID
+                name: document.getElementById('childName').value,
+                age: document.getElementById('childAge').value,
+                gender: document.getElementById('childGender').value,
+                grade: document.getElementById('grade').value,
+                iq: document.getElementById('iqScore').value,
+                verbal: document.getElementById('verbalReasoning').value,
+                numerical: document.getElementById('numericalReasoning').value,
+                spatial: document.getElementById('spatialReasoning').value,
+                memory: document.getElementById('memoryScore').value,
+                processing: document.getElementById('processingSpeed').value,
+                extroversion: document.getElementById('extroversion').value,
+                conscientiousness: document.getElementById('conscientiousness').value,
+                openness: document.getElementById('openness').value,
+                creativity: document.getElementById('creativity').value,
+                interests: Array.from(document.querySelectorAll('input[name="interests"]:checked')).map(cb => cb.value),
+                observations: document.getElementById('observations').value,
+                assessmentDate: new Date().toISOString(),
+                reportGenerated: false
+            };
+            
+            try {
+                updateProgress(30, 'Sending data to Gemini AI...');
+                
+                // Generate AI analysis using Gemini API
+                const reportHTML = await generateGeminiReport(data);
+                data.report = reportHTML;
+                data.reportGenerated = true;
+                
+                updateProgress(90, 'Finalizing report...');
+                
+                // Save or update child data
+                if (currentEditingId !== null) {
+                    children[currentEditingId] = data;
+                } else {
+                    children.push(data);
+                }
+                
+                saveChildrenData();
+                updateDashboardStats();
+                renderChildrenTable();
+                
+                updateProgress(100, 'Report generated successfully!');
+                
+                setTimeout(() => {
+                    // Show report
+                    document.getElementById('reportContainer').innerHTML = reportHTML;
+                    document.getElementById('loadingModal').style.display = 'none';
+                    document.getElementById('reportSection').style.display = 'block';
+                    document.getElementById('reportSection').scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Reset form
+                    document.getElementById('assessmentForm').reset();
+                    currentEditingId = null;
+                }, 1000);
+                
+            } catch (error) {
+                console.error('AI Analysis Error:', error);
+                document.getElementById('loadingModal').style.display = 'none';
+                
+                let errorMessage = 'Failed to generate AI analysis. ';
+                if (error.message.includes('API_KEY_INVALID')) {
+                    errorMessage += 'Please check your API key and try again.';
+                } else if (error.message.includes('QUOTA_EXCEEDED')) {
+                    errorMessage += 'API quota exceeded. Please try again later.';
+                } else if (error.message.includes('NETWORK_ERROR')) {
+                    errorMessage += 'Network connection failed. Please check your internet connection.';
+                } else {
+                    errorMessage += 'Please try again or contact support if the problem persists.';
+                }
+                
+                alert(errorMessage);
+            }
+        }
+
+        // Progress update function
+        function updateProgress(percentage, message) {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressFill && progressText) {
+                progressFill.style.width = percentage + '%';
+                progressText.textContent = message;
+            }
+        }
+
+        // Gemini AI Integration
+        async function generateGeminiReport(data) {
+            const prompt = createAnalysisPrompt(data);
+            
+            try {
+                updateProgress(40, 'Connecting to Gemini AI...');
+                
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 2048,
+                        }
+                    })
+                });
+
+                updateProgress(70, 'Processing AI response...');
+
+                if (!response.ok) {
+                    if (response.status === 400) {
+                        throw new Error('API_KEY_INVALID');
+                    } else if (response.status === 429) {
+                        throw new Error('QUOTA_EXCEEDED');
+                    } else {
+                        throw new Error('NETWORK_ERROR');
+                    }
+                }
+
+                const result = await response.json();
+                
+                if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
+                    throw new Error('Invalid response from Gemini AI');
+                }
+
+                const aiAnalysis = result.candidates[0].content.parts[0].text;
+                
+                updateProgress(80, 'Formatting report...');
+                
+                // Format the AI response into HTML
+                const reportHTML = formatGeminiResponse(aiAnalysis, data);
+                
+                return reportHTML;
+
+            } catch (error) {
+                console.error('Gemini API Error:', error);
+                
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    throw new Error('NETWORK_ERROR');
+                }
+                
+                throw error;
+            }
+        }
+
+        // Create analysis prompt for Gemini AI
+        function createAnalysisPrompt(data) {
+            const interests = data.interests.length > 0 ? data.interests.join(', ') : 'Not specified';
+            
+            return `As an expert child psychologist and career counselor, analyze the following psychological assessment data for a ${data.age}-year-old ${data.gender} child named ${data.name} and provide a comprehensive career guidance report.
+
+ASSESSMENT DATA:
+- Name: ${data.name}
+- Age: ${data.age} years
+- Gender: ${data.gender}
+- Grade Level: ${data.grade || 'Not specified'}
+
+COGNITIVE ASSESSMENT SCORES (1-10 scale):
+- IQ Score: ${data.iq || 'Not tested'}
+- Verbal Reasoning: ${data.verbal || 'Not assessed'}/10
+- Numerical Reasoning: ${data.numerical || 'Not assessed'}/10
+- Spatial Reasoning: ${data.spatial || 'Not assessed'}/10
+- Working Memory: ${data.memory || 'Not assessed'}/10
+- Processing Speed: ${data.processing || 'Not assessed'}/10
+
+PERSONALITY TRAITS (1-10 scale):
+- Extroversion: ${data.extroversion || 'Not assessed'}/10
+- Conscientiousness: ${data.conscientiousness || 'Not assessed'}/10
+- Openness to Experience: ${data.openness || 'Not assessed'}/10
+- Creativity: ${data.creativity || 'Not assessed'}/10
+
+INTERESTS & PREFERENCES:
+${interests}
+
+PROFESSIONAL OBSERVATIONS:
+${data.observations || 'No additional observations provided.'}
+
+Please provide a detailed analysis including:
+
+1. **Top Career Recommendations** (3-5 careers with match percentages)
+   - Explain why each career fits based on the assessment data
+   - Include specific skills and traits that support each recommendation
+
+2. **Key Strengths Analysis**
+   - Identify the child's strongest cognitive and personality traits
+   - Explain how these strengths can be leveraged
+
+3. **Development Areas**
+   - Areas that could benefit from further development
+   - Specific recommendations for skill building
+
+4. **Educational Pathway Suggestions**
+   - Subjects to focus on
+   - Extracurricular activities that would be beneficial
+
+5. **Parental Guidance**
+   - How parents can support the child's development
+   - Environmental factors to consider
+
+Format your response in a professional, easy-to-understand manner suitable for parents and educators. Be specific and actionable in your recommendations.`;
+        }
+
+        // Format Gemini response into HTML
+        function formatGeminiResponse(aiText, data) {
+            // Basic HTML formatting
+            let formattedHTML = aiText
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold text
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic text
+                .replace(/#{1,6}\s+(.*?)$/gm, '<h4>$1</h4>') // Headers
+                .replace(/\n\n/g, '</p><p>') // Paragraphs
+                .replace(/\n/g, '<br>'); // Line breaks
+
+            // Wrap in paragraphs
+            formattedHTML = '<p>' + formattedHTML + '</p>';
+
+            // Create structured report
+            const reportHTML = `
+                <div class="ai-report">
+                    <div class="report-header">
+                        <h3>🤖 AI-Generated Career Guidance Report for ${data.name}</h3>
+                        <div class="report-meta">
+                            <span><strong>Age:</strong> ${data.age} years</span>
+                            <span><strong>Assessment Date:</strong> ${new Date(data.assessmentDate).toLocaleDateString()}</span>
+                            <span><strong>AI Model:</strong> Gemini 1.5 Flash</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-analysis">
+                        ${formattedHTML}
+                    </div>
+                    
+                    <div class="assessment-summary">
+                        <h4>📊 Assessment Summary</h4>
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <strong>Cognitive Strengths:</strong>
+                                ${getCognitiveHighlights(data)}
+                            </div>
+                            <div class="summary-item">
+                                <strong>Personality Highlights:</strong>
+                                ${getPersonalityHighlights(data)}
+                            </div>
+                            <div class="summary-item">
+                                <strong>Interests:</strong>
+                                ${data.interests.length > 0 ? data.interests.join(', ') : 'Various areas to explore'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${data.observations ? `
+                    <div class="psychologist-notes">
+                        <h4>👨‍⚕️ Psychologist's Professional Observations</h4>
+                        <p><em>${data.observations}</em></p>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="report-footer">
+                        <p><small><strong>Disclaimer:</strong> This AI-generated analysis is for guidance purposes only and should be used in conjunction with professional psychological consultation. Individual development may vary, and ongoing assessment is recommended.</small></p>
+                    </div>
+                </div>
+            `;
+
+            return reportHTML;
+        }
+
+        // Helper functions for assessment summary
+        function getCognitiveHighlights(data) {
+            const cognitive = {
+                'Verbal Skills': data.verbal || 0,
+                'Mathematical Thinking': data.numerical || 0,
+                'Spatial Intelligence': data.spatial || 0,
+                'Memory': data.memory || 0,
+                'Processing Speed': data.processing || 0
+            };
+            
+            const highlights = Object.entries(cognitive)
+                .filter(([_, score]) => score >= 7)
+                .map(([skill, _]) => skill);
+                
+            return highlights.length > 0 ? highlights.join(', ') : 'Balanced across areas';
+        }
+
+        function getPersonalityHighlights(data) {
+            const personality = {
+                'Social Skills': data.extroversion || 0,
+                'Organization': data.conscientiousness || 0,
+                'Openness': data.openness || 0,
+                'Creativity': data.creativity || 0
+            };
+            
+            const highlights = Object.entries(personality)
+                .filter(([_, score]) => score >= 7)
+                .map(([trait, _]) => trait);
+                
+            return highlights.length > 0 ? highlights.join(', ') : 'Well-rounded personality';
+        }
+
+        // Additional styling for AI report
+        const aiReportStyles = `
+            <style>
+                .ai-report {
+                    font-family: 'Inter', sans-serif;
+                    line-height: 1.6;
+                    color: #374151;
+                }
+                
+                .report-header {
+                    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+                    color: white;
+                    padding: 2rem;
+                    border-radius: 0.75rem 0.75rem 0 0;
+                    margin-bottom: 0;
+                }
+                
+                .report-header h3 {
+                    margin: 0 0 1rem 0;
+                    font-size: 1.5rem;
+                    font-weight: 600;
+                }
+                
+                .report-meta {
+                    display: flex;
+                    gap: 2rem;
+                    flex-wrap: wrap;
+                    font-size: 0.875rem;
+                    opacity: 0.9;
+                }
+                
+                .ai-analysis {
+                    padding: 2rem;
+                    background: white;
+                }
+                
+                .ai-analysis h4 {
+                    color: #1F2937;
+                    font-weight: 600;
+                    margin: 2rem 0 1rem 0;
+                    padding-bottom: 0.5rem;
+                    border-bottom: 2px solid #E5E7EB;
+                }
+                
+                .ai-analysis strong {
+                    color: #4F46E5;
+                }
+                
+                .assessment-summary {
+                    background: #F8FAFC;
+                    border: 1px solid #E2E8F0;
+                    border-radius: 0.5rem;
+                    padding: 1.5rem;
+                    margin: 2rem 0;
+                }
+                
+                .summary-grid {
+                    display: grid;
+                    gap: 1rem;
+                    margin-top: 1rem;
+                }
+                
+                .summary-item {
+                    padding: 1rem;
+                    background: white;
+                    border-radius: 0.5rem;
+                    border-left: 4px solid #4F46E5;
+                }
+                
+                .psychologist-notes {
+                    background: #FEF7FF;
+                    border: 1px solid #E9D5FF;
+                    border-radius: 0.5rem;
+                    padding: 1.5rem;
+                    margin: 2rem 0;
+                }
+                
+                .psychologist-notes h4 {
+                    color: #7C3AED;
+                    margin-top: 0;
+                }
+                
+                .report-footer {
+                    background: #F9FAFB;
+                    padding: 1.5rem;
+                    border-radius: 0 0 0.75rem 0.75rem;
+                    border-top: 1px solid #E5E7EB;
+                }
+                
+                .report-footer small {
+                    color: #6B7280;
+                    line-height: 1.5;
+                }
+                
+                @media (max-width: 768px) {
+                    .report-meta {
+                        flex-direction: column;
+                        gap: 0.5rem;
+                    }
+                    
+                    .ai-analysis, .report-header {
+                        padding: 1.5rem;
+                    }
+                }
+            </style>
+        `;
+        
+        // Add AI report styles to document head
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                .ai-report {
+                    font-family: 'Inter', sans-serif;
+                    line-height: 1.6;
+                    color: #374151;
+                }
+                
+                .report-header {
+                    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+                    color: white;
+                    padding: 2rem;
+                    border-radius: 0.75rem 0.75rem 0 0;
+                    margin-bottom: 0;
+                }
+                
+                .report-header h3 {
+                    margin: 0 0 1rem 0;
+                    font-size: 1.5rem;
+                    font-weight: 600;
+                }
+                
+                .report-meta {
+                    display: flex;
+                    gap: 2rem;
+                    flex-wrap: wrap;
+                    font-size: 0.875rem;
+                    opacity: 0.9;
+                }
+                
+                .ai-analysis {
+                    padding: 2rem;
+                    background: white;
+                }
+                
+                .ai-analysis h4 {
+                    color: #1F2937;
+                    font-weight: 600;
+                    margin: 2rem 0 1rem 0;
+                    padding-bottom: 0.5rem;
+                    border-bottom: 2px solid #E5E7EB;
+                }
+                
+                .ai-analysis strong {
+                    color: #4F46E5;
+                }
+                
+                .assessment-summary {
+                    background: #F8FAFC;
+                    border: 1px solid #E2E8F0;
+                    border-radius: 0.5rem;
+                    padding: 1.5rem;
+                    margin: 2rem 0;
+                }
+                
+                .summary-grid {
+                    display: grid;
+                    gap: 1rem;
+                    margin-top: 1rem;
+                }
+                
+                .summary-item {
+                    padding: 1rem;
+                    background: white;
+                    border-radius: 0.5rem;
+                    border-left: 4px solid #4F46E5;
+                }
+                
+                .psychologist-notes {
+                    background: #FEF7FF;
+                    border: 1px solid #E9D5FF;
+                    border-radius: 0.5rem;
+                    padding: 1.5rem;
+                    margin: 2rem 0;
+                }
+                
+                .psychologist-notes h4 {
+                    color: #7C3AED;
+                    margin-top: 0;
+                }
+                
+                .report-footer {
+                    background: #F9FAFB;
+                    padding: 1.5rem;
+                    border-radius: 0 0 0.75rem 0.75rem;
+                    border-top: 1px solid #E5E7EB;
+                }
+                
+                .report-footer small {
+                    color: #6B7280;
+                    line-height: 1.5;
+                }
+                
+                @media (max-width: 768px) {
+                    .report-meta {
+                        flex-direction: column;
+                        gap: 0.5rem;
+                    }
+                    
+                    .ai-analysis, .report-header {
+                        padding: 1.5rem;
+                    }
+                }
+            </style>
+        `);
+
+        // Legacy function kept for compatibility (not used with Gemini)
+        function analyzeCareerPotential(data) {
+            const careers = [];
+            
+            // STEM careers
+            if (data.numerical >= 7 || data.spatial >= 7 || data.interests.includes('science') || data.interests.includes('mathematics')) {
+                careers.push({
+                    title: 'Engineer / Scientist',
+                    score: Math.min(95, (parseInt(data.numerical || 5) + parseInt(data.spatial || 5)) * 10),
+                    description: 'Strong potential in engineering, physics, mathematics, or research fields.',
+                    reasoning: 'High numerical/spatial reasoning scores and interest in STEM subjects.'
+                });
+            }
+            
+            // Technology
+            if (data.interests.includes('technology') || (data.numerical >= 6 && data.spatial >= 6)) {
+                careers.push({
+                    title: 'Software Developer / IT Specialist',
+                    score: Math.min(92, parseInt(data.numerical || 5) * 10 + parseInt(data.creativity || 5) * 5),
+                    description: 'Excellent fit for programming, web development, or cybersecurity.',
+                    reasoning: 'Strong logical thinking and technology interest.'
+                });
+            }
+            
+            // Creative fields
+            if (data.interests.includes('arts') || data.interests.includes('music') || data.creativity >= 7) {
+                careers.push({
+                    title: 'Creative Arts / Design',
+                    score: Math.min(90, parseInt(data.creativity || 5) * 12 + parseInt(data.openness || 5) * 5),
+                    description: 'Strong potential in graphic design, music, writing, or fine arts.',
+                    reasoning: 'High creativity scores and artistic interests.'
+                });
+            }
+            
+            // Leadership/Business
+            if (data.extroversion >= 7 || data.conscientiousness >= 7) {
+                careers.push({
+                    title: 'Business / Leadership',
+                    score: Math.min(88, parseInt(data.extroversion || 5) * 8 + parseInt(data.conscientiousness || 5) * 7),
+                    description: 'Natural leadership abilities for management, entrepreneurship, or sales.',
+                    reasoning: 'Strong interpersonal skills and organizational abilities.'
+                });
+            }
+            
+            // Healthcare/Helping
+            if (data.verbal >= 7 || data.extroversion >= 6) {
+                careers.push({
+                    title: 'Healthcare / Social Services',
+                    score: Math.min(86, parseInt(data.verbal || 5) * 9 + parseInt(data.extroversion || 5) * 6),
+                    description: 'Great potential as doctor, nurse, therapist, or social worker.',
+                    reasoning: 'Strong communication skills and helping nature.'
+                });
+            }
+            
+            return careers.sort((a, b) => b.score - a.score).slice(0, 3);
+        }
+
+        function analyzeStrengths(data) {
+            const strengths = [];
+            
+            if (data.verbal >= 7) strengths.push({ area: 'Verbal Communication', description: 'Excellent language and communication abilities' });
+            if (data.numerical >= 7) strengths.push({ area: 'Mathematical Thinking', description: 'Strong analytical and numerical problem-solving skills' });
+            if (data.spatial >= 7) strengths.push({ area: 'Spatial Intelligence', description: 'Great 3D visualization and spatial reasoning abilities' });
+            if (data.memory >= 7) strengths.push({ area: 'Working Memory', description: 'Excellent ability to hold and manipulate information' });
+            if (data.processing >= 7) strengths.push({ area: 'Processing Speed', description: 'Fast and efficient cognitive processing' });
+            if (data.creativity >= 7) strengths.push({ area: 'Creative Thinking', description: 'Strong innovative and creative problem-solving abilities' });
+            if (data.extroversion >= 7) strengths.push({ area: 'Social Skills', description: 'Natural ability to connect and communicate with others' });
+            if (data.conscientiousness >= 7) strengths.push({ area: 'Organization', description: 'Excellent planning and organizational skills' });
+            
+            return strengths.length > 0 ? strengths : [{ area: 'Balanced Profile', description: 'Well-rounded abilities across multiple areas' }];
+        }
+
+        function generateRecommendations(data) {
+            const recommendations = [];
+            
+            if (data.numerical < 6) recommendations.push('Focus on developing mathematical and analytical thinking through puzzles and games');
+            if (data.verbal < 6) recommendations.push('Encourage reading and verbal expression through storytelling and discussions');
+            if (data.creativity < 6) recommendations.push('Provide opportunities for creative expression through art, music, or creative writing');
+            if (data.extroversion < 5) recommendations.push('Gradually encourage social interactions and group activities');
+            if (data.interests.length < 2) recommendations.push('Explore diverse activities to discover natural interests and passions');
+            
+            recommendations.push('Continue regular psychological assessments to track development');
+            recommendations.push('Encourage exploration of recommended career fields through activities and exposure');
+            recommendations.push('Build on identified strengths while supporting areas for growth');
+            
+            return recommendations;
+        }
+
+        function downloadReport() {
+            alert('PDF download feature will be implemented with backend integration.');
+        }
+
+        function emailReport() {
+            alert('Email feature will be implemented with backend integration.');
+        }
+
+        // ========================================
+        // Psychologist Request Management
+        // ========================================
+
+        /**
+         * Initialize psychologist dashboard
+         */
+        function initPsychologistDashboard() {
+            loadPendingRequests();
+            loadGameResults();
+            updatePsychologistStats();
+        }
+
+        /**
+         * Load pending assessment requests
+         */
+        function loadPendingRequests() {
+            const requestsTable = document.getElementById('requestsTable');
+            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const currentPsychologist = JSON.parse(localStorage.getItem('EDUCE_user') || '{}');
+            
+            // Filter requests for current psychologist
+            const myRequests = requests.filter(req => 
+                req.psychologistId === currentPsychologist.id && req.status === 'pending'
+            );
+            
+            if (myRequests.length === 0) {
+                requestsTable.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #6B7280;">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>No pending requests. New assessment requests will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const requestsHTML = myRequests.map(request => createRequestCard(request)).join('');
+            requestsTable.innerHTML = `<div style="display: grid; gap: 1rem;">${requestsHTML}</div>`;
+        }
+
+        /**
+         * Create request card HTML
+         */
+        function createRequestCard(request) {
+            const requestDate = new Date(request.requestDate).toLocaleDateString();
+            
+            return `
+                <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 0.75rem; padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #2563EB, #3B82F6); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.1rem;">
+                                ${request.childName.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; font-weight: 600; color: #1F2937;">${request.childName}</h4>
+                                <p style="margin: 0.25rem 0 0 0; color: #6B7280; font-size: 0.875rem;">${request.childAge} years old</p>
+                                <p style="margin: 0.25rem 0 0 0; color: #6B7280; font-size: 0.875rem;">Parent: ${request.customerName}</p>
+                            </div>
+                        </div>
+                        <span style="background: #FEF3C7; color: #92400E; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">
+                            Pending
+                        </span>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: #374151;">Request Date:</strong> ${requestDate}
+                    </div>
+                    
+                    ${request.childInterests ? `
+                        <div style="margin-bottom: 1rem;">
+                            <strong style="color: #374151;">Child's Interests:</strong>
+                            <p style="margin: 0.5rem 0 0 0; color: #6B7280; font-size: 0.875rem;">${request.childInterests}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${request.childNotes ? `
+                        <div style="margin-bottom: 1rem;">
+                            <strong style="color: #374151;">Additional Notes:</strong>
+                            <p style="margin: 0.5rem 0 0 0; color: #6B7280; font-size: 0.875rem;">${request.childNotes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                        <button class="btn btn-primary" onclick="acceptRequest('${request.id}')" style="flex: 1;">
+                            <i class="fas fa-check"></i> Accept Request
+                        </button>
+                        <button class="btn btn-secondary" onclick="rejectRequest('${request.id}')" style="flex: 1;">
+                            <i class="fas fa-times"></i> Decline
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Accept assessment request
+         */
+        function acceptRequest(requestId) {
+            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const requestIndex = requests.findIndex(req => req.id === requestId);
+            
+            if (requestIndex === -1) return;
+            
+            const request = requests[requestIndex];
+            
+            // Update request status
+            requests[requestIndex].status = 'accepted';
+            requests[requestIndex].acceptedDate = new Date().toISOString();
+            localStorage.setItem('EDUCE_requests', JSON.stringify(requests));
+            
+            // Update child status in customer data
+            updateChildStatus(request.customerId, request.childId, 'accepted');
+            
+            // Refresh the requests table
+            loadPendingRequests();
+            updatePsychologistStats();
+            
+            showSuccessMessage(`Assessment request for ${request.childName} has been accepted!`);
+        }
+
+        /**
+         * Reject assessment request
+         */
+        function rejectRequest(requestId) {
+            if (!confirm('Are you sure you want to reject this assessment request?')) return;
+            
+            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const requestIndex = requests.findIndex(req => req.id === requestId);
+            
+            if (requestIndex === -1) return;
+            
+            const request = requests[requestIndex];
+            
+            // Update request status
+            requests[requestIndex].status = 'rejected';
+            requests[requestIndex].rejectedDate = new Date().toISOString();
+            localStorage.setItem('EDUCE_requests', JSON.stringify(requests));
+            
+            // Update child status in customer data
+            updateChildStatus(request.customerId, request.childId, 'available');
+            
+            // Refresh the requests table
+            loadPendingRequests();
+            updatePsychologistStats();
+            
+            showSuccessMessage(`Assessment request for ${request.childName} has been rejected.`);
+        }
+
+        /**
+         * Update child status in customer data
+         */
+        function updateChildStatus(customerId, childId, status) {
+            // This would typically be done via API, but for demo we'll simulate
+            // In a real app, you'd send this update to the server
+            console.log(`Updating child ${childId} status to ${status} for customer ${customerId}`);
+        }
+
+        /**
+         * Load completed game results
+         */
+        function loadGameResults() {
+            const gameResultsTable = document.getElementById('gameResultsTable');
+            const gameResults = JSON.parse(localStorage.getItem('EDUCE_game_results') || '[]');
+            const currentPsychologist = JSON.parse(localStorage.getItem('EDUCE_user') || '{}');
+            
+            // Filter results for current psychologist
+            const myResults = gameResults.filter(result => 
+                result.psychologistId === currentPsychologist.id
+            );
+            
+            if (myResults.length === 0) {
+                gameResultsTable.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #6B7280;">
+                        <i class="fas fa-gamepad" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>No completed assessments yet. Game results will appear here after children complete their interactive tests.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const resultsHTML = myResults.map(result => createGameResultCard(result)).join('');
+            gameResultsTable.innerHTML = `<div style="display: grid; gap: 1rem;">${resultsHTML}</div>`;
+        }
+
+        /**
+         * Create game result card HTML
+         */
+        function createGameResultCard(result) {
+            const completedDate = new Date(result.completedDate).toLocaleDateString();
+            
+            return `
+                <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 0.75rem; padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.1rem;">
+                                ${result.childName.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; font-weight: 600; color: #1F2937;">${result.childName}</h4>
+                                <p style="margin: 0.25rem 0 0 0; color: #6B7280; font-size: 0.875rem;">Completed: ${completedDate}</p>
+                                <p style="margin: 0.25rem 0 0 0; color: #6B7280; font-size: 0.875rem;">${result.answers.length} questions answered</p>
+                            </div>
+                        </div>
+                        <span style="background: #D1FAE5; color: #065F46; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">
+                            Completed
+                        </span>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: #374151;">Assessment Categories:</strong>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                            ${[...new Set(result.answers.map(a => a.category))].map(category => 
+                                `<span style="background: #E0F2FE; color: #0C4A6E; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">${category}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                        <button class="btn btn-primary" onclick="viewGameResults('${result.childId}')" style="flex: 1;">
+                            <i class="fas fa-eye"></i> View Detailed Results
+                        </button>
+                        <button class="btn btn-secondary" onclick="generateFinalReport('${result.childId}')" style="flex: 1;">
+                            <i class="fas fa-file-alt"></i> Generate Report
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * View detailed game results
+         */
+        function viewGameResults(childId) {
+            const gameResults = JSON.parse(localStorage.getItem('EDUCE_game_results') || '[]');
+            const result = gameResults.find(r => r.childId === childId);
+            
+            if (!result) return;
+            
+            let detailsHTML = `
+                <div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden;">
+                    <div style="background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 2rem; text-align: center;">
+                        <h2 style="margin: 0; font-size: 1.5rem;">${result.childName}'s Assessment Results</h2>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Interactive Games - Detailed Analysis</p>
+                    </div>
+                    <div style="padding: 2rem;">
+            `;
+            
+            result.answers.forEach((answer, index) => {
+                detailsHTML += `
+                    <div style="margin-bottom: 2rem; padding: 1.5rem; background: #F8FAFC; border-radius: 0.75rem; border-left: 4px solid #10B981;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #1F2937;">${answer.gameTitle}</h4>
+                        <p style="margin: 0 0 1rem 0; color: #6B7280; font-weight: 500;">${answer.question}</p>
+                        <p style="margin: 0; background: white; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #E5E7EB;">
+                            <strong>Answer:</strong> ${answer.answer}
+                        </p>
+                        <div style="margin-top: 0.5rem;">
+                            <span style="background: #E0F2FE; color: #0C4A6E; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">
+                                ${answer.category}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            detailsHTML += `
+                    </div>
+                </div>
+            `;
+            
+            // Show in modal or new window
+            const newWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');
+            newWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Assessment Results - ${result.childName}</title>
+                    <style>
+                        body { font-family: Inter, Arial, sans-serif; margin: 20px; background: #F1F5F9; }
+                        * { box-sizing: border-box; }
+                    </style>
+                </head>
+                <body>
+                    ${detailsHTML}
+                </body>
+                </html>
+            `);
+        }
+
+        /**
+         * Generate final report based on game results
+         */
+        function generateFinalReport(childId) {
+            const gameResults = JSON.parse(localStorage.getItem('EDUCE_game_results') || '[]');
+            const result = gameResults.find(r => r.childId === childId);
+            
+            if (!result) return;
+            
+            // Update child status to completed and mark report as ready
+            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const request = requests.find(req => req.childId === childId);
+            
+            if (request) {
+                request.status = 'completed';
+                request.reportGeneratedDate = new Date().toISOString();
+                localStorage.setItem('EDUCE_requests', JSON.stringify(requests));
+            }
+            
+            // This would integrate with the existing AI report generation
+            showSuccessMessage(`Final report generated for ${result.childName}. Parents will be notified.`);
+            
+            // Refresh tables
+            loadGameResults();
+            updatePsychologistStats();
+        }
+
+        /**
+         * Refresh requests
+         */
+        function refreshRequests() {
+            loadPendingRequests();
+            showSuccessMessage('Requests refreshed!');
+        }
+
+        /**
+         * Refresh game results
+         */
+        function refreshGameResults() {
+            loadGameResults();
+            showSuccessMessage('Game results refreshed!');
+        }
+
+        /**
+         * Update psychologist dashboard statistics
+         */
+        function updatePsychologistStats() {
+            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const gameResults = JSON.parse(localStorage.getItem('EDUCE_game_results') || '[]');
+            const currentPsychologist = JSON.parse(localStorage.getItem('EDUCE_user') || '{}');
+            
+            // Filter for current psychologist
+            const myRequests = requests.filter(req => req.psychologistId === currentPsychologist.id);
+            const myResults = gameResults.filter(result => result.psychologistId === currentPsychologist.id);
+            
+            // Update stats
+            document.getElementById('totalChildren').textContent = myRequests.length;
+            document.getElementById('pendingAssessments').textContent = myRequests.filter(req => req.status === 'pending').length;
+            document.getElementById('completedReports').textContent = myRequests.filter(req => req.status === 'completed').length;
+        }
+
+        /**
+         * Show success message
+         */
+        function showSuccessMessage(message) {
+            // Create a simple toast notification
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10B981;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+                z-index: 10000;
+                font-weight: 500;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+
+        // Psychologist Profile Functions
+        async function loadPsychologistProfile() {
+            const profileContent = document.getElementById('profileContent');
+            
+            // Show loading state
+            profileContent.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: #6B7280;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    <p>Profil məlumatları yüklənir...</p>
+                </div>
+            `;
+            
+            let psychologist = null;
+            
+            // Try to get from API first
+            try {
+                if (typeof AdaptiveDataService !== 'undefined') {
+                    // Get psychologist profile from API using current user token
+                    const response = await fetch('/api/psychologists/my-profile', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('EDUCE_token')}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        psychologist = await response.json();
+                        console.log('Profil API-dan yükləndi:', psychologist);
+                    }
+                }
+            } catch (error) {
+                console.log('API-dan profil yüklənmədi, localStorage-dan cəhd edilir:', error);
+            }
+            
+            // Fallback to localStorage
+            if (!psychologist) {
+                const psychologists = JSON.parse(localStorage.getItem('EDUCE_psychologists') || '[]');
+                const currentPsychId = currentUser.psychologistId || getCurrentPsychologistId();
+                psychologist = psychologists.find(p => p.id === currentPsychId) || 
+                             psychologists.find(p => p.name && currentUser.name && 
+                                               p.name.toLowerCase().includes(currentUser.name.toLowerCase()));
+                
+                if (psychologist) {
+                    console.log('Profil localStorage-dan yükləndi:', psychologist);
+                }
+            }
+            
+            // If still no psychologist found, create from current user
+            if (!psychologist && currentUser.email) {
+                psychologist = {
+                    id: currentUser.psychologistId || 'psy001',
+                    name: currentUser.name || 'Psixoloq',
+                    title: currentUser.title || 'Psixoloq', 
+                    email: currentUser.email,
+                    specializations: currentUser.specializations || ['Uşaq Psixologiyası'],
+                    experience: currentUser.experience || '5+ il',
+                    rating: currentUser.rating || 4.8,
+                    completedAssessments: currentUser.completedAssessments || 0,
+                    description: currentUser.description || 'Təcrübəli psixoloq.',
+                    available: currentUser.available !== false,
+                    approved: currentUser.approved || false,
+                    registrationDate: currentUser.registrationDate || new Date().toISOString(),
+                    approvedDate: currentUser.approvedDate
+                };
+                console.log('Profil currentUser-dan yaradıldı:', psychologist);
+            }
+            
+            if (!psychologist) {
+                profileContent.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #6B7280;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #F59E0B;"></i>
+                        <h3>Profil Tapılmadı</h3>
+                        <p>Psixoloq profili tapılmadı. Lütfən yenidən giriş edin və ya admin ilə əlaqə saxlayın.</p>
+                        <button onclick="logout()" class="btn btn-primary" style="margin-top: 1rem;">Yenidən Giriş</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            const approvalStatus = psychologist.approved ? 
+                '<span style="background: #D1FAE5; color: #065F46; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">Təsdiqlənmiş</span>' :
+                '<span style="background: #FEF3C7; color: #92400E; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">Gözləyir</span>';
+            
+            profileContent.innerHTML = `
+                <div style="background: #F8FAFC; border-radius: 0.75rem; padding: 2rem;">
+                    <div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 2rem;">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #2563EB, #3B82F6); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.5rem;">
+                            ${psychologist.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 0.5rem 0; color: #1F2937; font-size: 1.5rem;">${psychologist.name}</h3>
+                            <p style="margin: 0 0 0.5rem 0; color: #6B7280; font-size: 1.1rem;">${psychologist.title}</p>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                ${approvalStatus}
+                                <span style="color: #6B7280; font-size: 0.875rem;">ID: ${psychologist.id.toUpperCase()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <div style="background: white; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid #E5E7EB;">
+                            <h4 style="margin: 0 0 1rem 0; color: #374151; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-briefcase" style="color: #2563EB;"></i> Peşəkar Məlumatlar
+                            </h4>
+                            <div style="margin-bottom: 0.75rem;">
+                                <strong style="color: #6B7280; font-size: 0.875rem;">Təcrübə:</strong>
+                                <span style="color: #1F2937; margin-left: 0.5rem;">${psychologist.experience}</span>
+                            </div>
+                            <div style="margin-bottom: 0.75rem;">
+                                <strong style="color: #6B7280; font-size: 0.875rem;">Reytinq:</strong>
+                                <span style="color: #1F2937; margin-left: 0.5rem;">${psychologist.rating}/5.0</span>
+                            </div>
+                            <div style="margin-bottom: 0.75rem;">
+                                <strong style="color: #6B7280; font-size: 0.875rem;">Tamamlanmış Qiymətləndirmələr:</strong>
+                                <span style="color: #1F2937; margin-left: 0.5rem;">${psychologist.completedAssessments}</span>
+                            </div>
+                            <div>
+                                <strong style="color: #6B7280; font-size: 0.875rem;">Status:</strong>
+                                <span style="color: #1F2937; margin-left: 0.5rem;">${psychologist.available ? 'Aktiv' : 'Qeyri-aktiv'}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid #E5E7EB;">
+                            <h4 style="margin: 0 0 1rem 0; color: #374151; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-graduation-cap" style="color: #2563EB;"></i> İxtisaslar
+                            </h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                ${psychologist.specializations.map(spec => 
+                                    `<span style="background: #E0F2FE; color: #0C4A6E; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">${spec}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid #E5E7EB;">
+                        <h4 style="margin: 0 0 1rem 0; color: #374151; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-info-circle" style="color: #2563EB;"></i> Haqqında
+                        </h4>
+                        <p style="margin: 0; color: #6B7280; line-height: 1.6;">${psychologist.description}</p>
+                    </div>
+                    
+                    <div style="background: white; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid #E5E7EB; margin-top: 1.5rem;">
+                        <h4 style="margin: 0 0 1rem 0; color: #374151; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-calendar" style="color: #2563EB;"></i> Qeydiyyat Tarixi
+                        </h4>
+                        <p style="margin: 0; color: #6B7280;">${new Date(psychologist.registrationDate).toLocaleDateString('az-AZ')}</p>
+                        ${psychologist.approved ? `
+                            <div style="margin-top: 0.75rem;">
+                                <strong style="color: #6B7280; font-size: 0.875rem;">Təsdiq tarixi:</strong>
+                                <span style="color: #1F2937; margin-left: 0.5rem;">${new Date(psychologist.approvedDate).toLocaleDateString('az-AZ')}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getCurrentPsychologistId() {
+            // Try to match by name or email
+            const psychologists = JSON.parse(localStorage.getItem('EDUCE_psychologists') || '[]');
+            return psychologists.find(p => 
+                p.name.toLowerCase().includes(currentUser.name?.toLowerCase() || '') ||
+                p.title.toLowerCase().includes('psychologist')
+            )?.id || 'psy001';
+        }
+        
+        function editPsychologistProfile() {
+            const psychologists = JSON.parse(localStorage.getItem('EDUCE_psychologists') || '[]');
+            const currentPsychId = currentUser.psychologistId || getCurrentPsychologistId();
+            const psychologist = psychologists.find(p => p.id === currentPsychId);
+            
+            if (!psychologist) {
+                alert('Profil tapılmadı!');
+                return;
+            }
+            
+            // Fill form with current data
+            document.getElementById('psychName').value = psychologist.name;
+            document.getElementById('psychTitle').value = psychologist.title;
+            document.getElementById('psychExperience').value = psychologist.experience;
+            document.getElementById('psychAvailable').value = psychologist.available.toString();
+            document.getElementById('psychSpecializations').value = psychologist.specializations.join(', ');
+            document.getElementById('psychDescription').value = psychologist.description;
+            
+            document.getElementById('profileEditModal').style.display = 'block';
+        }
+        
+        function closeProfileEdit() {
+            document.getElementById('profileEditModal').style.display = 'none';
+        }
+        
+        // Profile edit form submission
+        document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                const formData = {
+                    name: document.getElementById('psychName').value,
+                    title: document.getElementById('psychTitle').value,
+                    experience: document.getElementById('psychExperience').value,
+                    available: document.getElementById('psychAvailable').value === 'true',
+                    specializations: document.getElementById('psychSpecializations').value
+                        .split(',').map(s => s.trim()).filter(s => s.length > 0),
+                    description: document.getElementById('psychDescription').value
+                };
+
+                // Try to update via API first
+                let success = false;
+                try {
+                    const response = await fetch('/api/psychologists/my-profile', {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('EDUCE_token')}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        success = true;
+                        console.log('Profil API-da yeniləndi');
+                    }
+                } catch (error) {
+                    console.log('API yeniləməsi uğursuz, localStorage istifadə edilir:', error);
+                }
+
+                // Fallback to localStorage if API fails
+                if (!success) {
+                    const psychologists = JSON.parse(localStorage.getItem('EDUCE_psychologists') || '[]');
+                    const currentPsychId = currentUser.psychologistId || getCurrentPsychologistId();
+                    const psychologistIndex = psychologists.findIndex(p => p.id === currentPsychId);
+                    
+                    if (psychologistIndex !== -1) {
+                        psychologists[psychologistIndex] = {
+                            ...psychologists[psychologistIndex],
+                            ...formData
+                        };
+                        localStorage.setItem('EDUCE_psychologists', JSON.stringify(psychologists));
+                        success = true;
+                    }
+                }
+
+                if (success) {
+                    // Close modal and reload profile
+                    closeProfileEdit();
+                    await loadPsychologistProfile();
+                    showSuccessMessage('Profil uğurla yeniləndi!');
+                } else {
+                    alert('Profil yenilənməsində xəta baş verdi!');
+                }
+
+            } catch (error) {
+                console.error('Profil yeniləmə xətası:', error);
+                alert('Profil yenilənməsində xəta baş verdi!');
+            }
+        });
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePsychologistInfo();
+            loadPsychologistProfile();
+            loadChildrenData();
+            updateDashboardStats();
+            renderChildrenTable();
+            checkApiKeyStatus();
+        });
+    </script>
+    <script src="api-service.js"></script>
+</body>
+</html> 
