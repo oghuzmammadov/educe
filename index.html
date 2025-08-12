@@ -402,11 +402,36 @@
                 <span class="brand-text">EDUCE</span>
             </div>
             <div class="nav-menu">
-                <a href="#home" class="nav-link">Home</a>
-                <a href="#how-it-works" class="nav-link">How It Works</a>
-                <a href="#features" class="nav-link">Features</a>
-                <a href="#contact" class="nav-link">Contact</a>
-                <a href="login.html" class="nav-link">Psychologist Login</a>
+                <div class="nav-links">
+                    <a href="#home" class="nav-link" data-translate="nav_home">Home</a>
+                    <a href="#how-it-works" class="nav-link" data-translate="nav_how_it_works">How It Works</a>
+                    <a href="#features" class="nav-link" data-translate="nav_features">Features</a>
+                    <a href="#contact" class="nav-link" data-translate="nav_contact">Contact</a>
+                    <a href="login.html" class="nav-link" data-translate="nav_psychologist_login">Psychologist Login</a>
+                </div>
+                
+                <!-- Language Selector -->
+                <div class="language-selector">
+                    <button class="language-btn" onclick="toggleLanguageMenu()">
+                        <i class="fas fa-globe"></i>
+                        <span id="currentLanguage">AZ</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <button class="language-option" onclick="changeLanguage('az')">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiMwMDkxREEiLz4KPHJlY3QgeT0iNiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiNGRjAwMDAiLz4KPHJlY3QgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSI2IiBmaWxsPSIjMDA5QjNBIi8+Cjwvc3ZnPgo=" alt="AZ" class="flag-icon">
+                            Azərbaycan
+                        </button>
+                        <button class="language-option" onclick="changeLanguage('en')">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjE4IiBmaWxsPSIjMDEyMTY5Ii8+CjxyZWN0IHk9IjIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyIiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHk9IjYiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyIiBmaWxsPSIjRkYwMDAwIi8+CjxyZWN0IHk9IjEwIiB3aWR0aD0iMjQiIGhlaWdodD0iMiIgZmlsbD0iI0ZGRkZGRiIvPgo8cmVjdCB5PSIxNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjIiIGZpbGw9IiNGRjAwMDAiLz4KPC9zdmc+Cg==" alt="EN" class="flag-icon">
+                            English
+                        </button>
+                        <button class="language-option" onclick="changeLanguage('ru')">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiNGRkZGRkYiLz4KPHJlY3QgeT0iNiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiMwMTIxNjkiLz4KPHJlY3QgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSI2IiBmaWxsPSIjRkYwMDAwIi8+Cjwvc3ZnPgo=" alt="RU" class="flag-icon">
+                            Русский
+                        </button>
+                    </div>
+                </div>
                 
                 <!-- Customer Profile Dropdown -->
                 <div class="profile-dropdown" id="profileDropdown" style="display: none;">
@@ -452,7 +477,7 @@
                                 <i class="fas fa-chart-bar"></i> View Reports
                             </button>
                             <button class="profile-action-btn" onclick="editProfile()">
-                                <i class="fas fa-user-edit"></i> Edit Profile
+                                <i class="fas fa-user-edit"></i> My Profile
                             </button>
                             <button class="profile-action-btn logout-btn" onclick="logoutCustomer()">
                                 <i class="fas fa-sign-out-alt"></i> Logout
@@ -477,37 +502,37 @@
         <div class="container">
             <div class="hero-content">
                 <div class="hero-text">
-                    <h1 class="hero-title">
+                    <h1 class="hero-title" data-translate="hero_title">
                         Discover Your Child's 
                         <span class="highlight">Potential</span> 
                         Through Science
                     </h1>
-                    <p class="hero-subtitle">
+                    <p class="hero-subtitle" data-translate="hero_subtitle">
                         Professional psychological testing and AI-powered career guidance 
                         to help your child find their perfect path in life.
                     </p>
                     <div class="hero-buttons">
                         <button class="btn btn-primary btn-large" onclick="handleStartNow()">
                             <i class="fas fa-rocket"></i>
-                            Start Now
+                            <span data-translate="btn_start_now">Start Now</span>
                         </button>
-                        <button class="btn btn-secondary btn-large">
+                        <button class="btn btn-secondary btn-large" onclick="showDemoModal()">
                             <i class="fas fa-play"></i>
-                            Watch Demo
+                            <span data-translate="btn_watch_demo">Watch Demo</span>
                         </button>
                     </div>
                     <div class="hero-stats">
                         <div class="stat">
-                            <span class="stat-number">10,000+</span>
-                            <span class="stat-label">Happy Families</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-number">95%</span>
-                            <span class="stat-label">Accuracy Rate</span>
+                            <span class="stat-number">1000+</span>
+                            <span class="stat-label" data-translate="stats_children">Children</span>
                         </div>
                         <div class="stat">
                             <span class="stat-number">50+</span>
-                            <span class="stat-label">Expert Psychologists</span>
+                            <span class="stat-label" data-translate="stats_psychologists">Psychologists</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">95%</span>
+                            <span class="stat-label" data-translate="stats_satisfaction">Satisfaction</span>
                         </div>
                     </div>
                 </div>
@@ -530,8 +555,8 @@
     <section id="how-it-works" class="how-it-works">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">How EDUCE Works</h2>
-                <p class="section-subtitle">
+                <h2 class="section-title" data-translate="how_it_works_title">How EDUCE Works</h2>
+                <p class="section-subtitle" data-translate="how_it_works_subtitle">
                     Four simple steps to unlock your child's potential
                 </p>
             </div>
@@ -543,8 +568,8 @@
                         <span class="step-number">1</span>
                     </div>
                     <div class="step-content">
-                        <h3 class="step-title">Registration</h3>
-                        <p class="step-description">
+                        <h3 class="step-title" data-translate="step1_title">Registration</h3>
+                        <p class="step-description" data-translate="step1_description">
                             Create your account and provide basic information about your child's 
                             age, interests, and educational background.
                         </p>
@@ -557,8 +582,8 @@
                         <span class="step-number">2</span>
                     </div>
                     <div class="step-content">
-                        <h3 class="step-title">Take the Test</h3>
-                        <p class="step-description">
+                        <h3 class="step-title" data-translate="step2_title">Take the Test</h3>
+                        <p class="step-description" data-translate="step2_description">
                             Your child completes scientifically-designed psychological assessments 
                             in a fun, interactive environment.
                         </p>
@@ -571,8 +596,8 @@
                         <span class="step-number">3</span>
                     </div>
                     <div class="step-content">
-                        <h3 class="step-title">Psychologist Analysis</h3>
-                        <p class="step-description">
+                        <h3 class="step-title" data-translate="step3_title">Psychologist Analysis</h3>
+                        <p class="step-description" data-translate="step3_description">
                             Licensed psychologists review the results and provide professional 
                             insights into your child's cognitive patterns.
                         </p>
@@ -585,8 +610,8 @@
                         <span class="step-number">4</span>
                     </div>
                     <div class="step-content">
-                        <h3 class="step-title">AI-Powered Report</h3>
-                        <p class="step-description">
+                        <h3 class="step-title" data-translate="step4_title">AI-Powered Report</h3>
+                        <p class="step-description" data-translate="step4_description">
                             Receive a comprehensive report with career recommendations, 
                             learning strategies, and personalized development plans.
                         </p>
@@ -600,8 +625,8 @@
     <section id="features" class="features">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Why Choose EDUCE?</h2>
-                <p class="section-subtitle">
+                <h2 class="section-title" data-translate="features_title">Why Choose EDUCE?</h2>
+                <p class="section-subtitle" data-translate="features_subtitle">
                     Advanced technology meets professional expertise
                 </p>
             </div>
@@ -611,8 +636,8 @@
                     <div class="feature-icon">
                         <i class="fas fa-brain"></i>
                     </div>
-                    <h3 class="feature-title">AI-Powered Analysis</h3>
-                    <p class="feature-description">
+                    <h3 class="feature-title" data-translate="feature1_title">AI-Powered Analysis</h3>
+                    <p class="feature-description" data-translate="feature1_description">
                         Our advanced artificial intelligence processes thousands of data points 
                         to provide accurate career predictions and learning recommendations.
                     </p>
@@ -622,10 +647,9 @@
                     <div class="feature-icon">
                         <i class="fas fa-user-friends"></i>
                     </div>
-                    <h3 class="feature-title">Personalized Approach</h3>
-                    <p class="feature-description">
-                        Every child is unique. Our assessments adapt to individual personalities, 
-                        learning styles, and developmental stages.
+                    <h3 class="feature-title" data-translate="feature2_title">Professional Psychologists</h3>
+                    <p class="feature-description" data-translate="feature2_description">
+                        Our team consists of licensed child psychologists, each with 10+ years of experience.
                     </p>
                 </div>
 
@@ -633,10 +657,9 @@
                     <div class="feature-icon">
                         <i class="fas fa-certificate"></i>
                     </div>
-                    <h3 class="feature-title">Expert Psychologists</h3>
-                    <p class="feature-description">
-                        Licensed professionals with specialized training in child development 
-                        ensure the highest quality of analysis and recommendations.
+                    <h3 class="feature-title" data-translate="feature2_title">Professional Psychologists</h3>
+                    <p class="feature-description" data-translate="feature2_description">
+                        Our team consists of licensed child psychologists, each with 10+ years of experience.
                     </p>
                 </div>
 
@@ -644,8 +667,8 @@
                     <div class="feature-icon">
                         <i class="fas fa-shield-alt"></i>
                     </div>
-                    <h3 class="feature-title">Secure & Private</h3>
-                    <p class="feature-description">
+                    <h3 class="feature-title" data-translate="feature3_title">Secure & Private</h3>
+                    <p class="feature-description" data-translate="feature3_description">
                         Your family's data is protected with bank-level security. We never 
                         share personal information with third parties.
                     </p>
@@ -655,8 +678,8 @@
                     <div class="feature-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <h3 class="feature-title">Progress Tracking</h3>
-                    <p class="feature-description">
+                    <h3 class="feature-title" data-translate="feature4_title">Progress Tracking</h3>
+                    <p class="feature-description" data-translate="feature4_description">
                         Monitor your child's development over time with detailed progress 
                         reports and milestone achievements.
                     </p>
@@ -666,8 +689,8 @@
                     <div class="feature-icon">
                         <i class="fas fa-headset"></i>
                     </div>
-                    <h3 class="feature-title">24/7 Support</h3>
-                    <p class="feature-description">
+                    <h3 class="feature-title" data-translate="feature5_title">24/7 Support</h3>
+                    <p class="feature-description" data-translate="feature5_description">
                         Our dedicated support team is always available to help you 
                         understand results and answer your questions.
                     </p>
@@ -681,8 +704,8 @@
         <div class="container">
             <div class="contact-content">
                 <div class="contact-info">
-                    <h2 class="section-title">Get in Touch</h2>
-                    <p class="section-subtitle">
+                    <h2 class="section-title" data-translate="contact_title">Get in Touch</h2>
+                    <p class="section-subtitle" data-translate="contact_subtitle">
                         Have questions? We're here to help you understand your child's potential.
                     </p>
                     
@@ -690,22 +713,22 @@
                         <div class="contact-item">
                             <i class="fas fa-envelope"></i>
                             <div>
-                                <h4>Email Us</h4>
+                                <h4 data-translate="contact_email">Email Us</h4>
                                 <p>oguzmemmedov07@gmail.com</p>
                             </div>
                         </div>
                         <div class="contact-item">
                             <i class="fas fa-phone"></i>
                             <div>
-                                <h4>Call Us</h4>
+                                <h4 data-translate="contact_call">Call Us</h4>
                                 <p>+994 (60) 441 26 29</p>
                             </div>
                         </div>
                         <div class="contact-item">
                             <i class="fas fa-clock"></i>
                             <div>
-                                <h4>Office Hours</h4>
-                                <p>Mon-Fri: 9AM-6PM EST</p>
+                                <h4 data-translate="contact_hours">Office Hours</h4>
+                                <p data-translate="contact_hours_time">Mon-Fri: 9AM-6PM EST</p>
                             </div>
                         </div>
                     </div>
@@ -713,24 +736,25 @@
 
                 <form class="contact-form" id="contactForm">
                     <div class="form-group">
-                        <label for="name">Full Name</label>
+                        <label for="name" data-translate="contact_form_name">Full Name</label>
                         <input type="text" id="name" name="name" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="email">Email Address</label>
+                        <label for="email" data-translate="contact_form_email">Email Address</label>
                         <input type="email" id="email" name="email" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="message">Message</label>
+                        <label for="message" data-translate="contact_form_message">Message</label>
                         <textarea id="message" name="message" rows="5" required 
+                                  data-translate-placeholder="contact_form_placeholder"
                                   placeholder="Tell us about your child and how we can help..."></textarea>
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-large">
                         <i class="fas fa-paper-plane"></i>
-                        Send Message
+                        <span data-translate="contact_send_message">Send Message</span>
                     </button>
                 </form>
             </div>
@@ -741,85 +765,49 @@
     <section class="cta">
         <div class="container">
             <div class="cta-content">
-                <h2 class="cta-title">Ready to Discover Your Child's Potential?</h2>
-                <p class="cta-subtitle">
+                <h2 class="cta-title" data-translate="cta_title">Ready to Discover Your Child's Potential?</h2>
+                <p class="cta-subtitle" data-translate="cta_subtitle">
                     Join thousands of families who have already found their path with EDUCE.
                 </p>
                 <div class="cta-buttons">
                     <button class="btn btn-primary btn-large" onclick="handleStartNow()">
                         <i class="fas fa-user-plus"></i>
-                        Get Started
+                        <span data-translate="cta_get_started">Get Started</span>
                     </button>
                     <button class="btn btn-outline btn-large" onclick="window.location.href='register.html'">
                         <i class="fas fa-graduation-cap"></i>
-                        Join as Psychologist
+                        <span data-translate="cta_join_psychologist">Join as Psychologist</span>
                     </button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <div class="nav-brand">
-                        <i class="fas fa-brain brand-icon"></i>
-                        <span class="brand-text">EDUCE</span>
-                    </div>
-                    <p class="footer-description">
-                        Empowering children to discover their potential through 
-                        science-backed psychological assessments and AI-powered insights.
-                    </p>
-                    <div class="social-links">
-                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-links">
-                    <div class="footer-column">
-                        <h4 class="footer-title">Services</h4>
-                        <ul class="footer-list">
-                            <li><a href="#">Psychological Testing</a></li>
-                            <li><a href="#">Career Guidance</a></li>
-                            <li><a href="#">AI Analysis</a></li>
-                            <li><a href="#">Progress Tracking</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="footer-column">
-                        <h4 class="footer-title">Company</h4>
-                        <ul class="footer-list">
-                            <li><a href="#">About Us</a></li>
-                            <li><a href="#">Our Team</a></li>
-                            <li><a href="#">Careers</a></li>
-                            <li><a href="#">Press</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="footer-column">
-                        <h4 class="footer-title">Support</h4>
-                        <ul class="footer-list">
-                            <li><a href="#">Help Center</a></li>
-                            <li><a href="#">Privacy Policy</a></li>
-                            <li><a href="#">Terms of Service</a></li>
-                            <li><a href="#">Contact</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; 2024 EDUCE. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+
 
     <!-- Modals -->
+    <!-- Demo Video Modal -->
+    <div id="demoModal" class="modal-overlay">
+        <div class="modal-content demo-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-play"></i> EDUCE Demo Video</h3>
+                <button class="modal-close" onclick="closeDemoModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="video-container">
+                    <iframe id="demoVideo" 
+                            src="https://www.youtube.com/embed/HLnwCYTw00w?start=13&autoplay=1&rel=0&modestbranding=1" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Add Child Modal -->
     <div id="addChildModal" class="modal-overlay">
         <div class="modal-content">
@@ -1479,9 +1467,332 @@
                 justify-content: center;
             }
         }
+
+        /* Footer Styles */
+        .footer {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .footer-section h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #e5e7eb;
+        }
+
+        .footer-section p {
+            margin-bottom: 0.5rem;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        .footer-description {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-top: 0.5rem;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            color: #d1d5db;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            color: #fbbf24;
+        }
+
+        .project-lead {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .lead-info strong {
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #fbbf24;
+        }
+
+        .contact-info {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            color: #e5e7eb;
+        }
+
+        .footer-bottom {
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-bottom-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .footer-bottom p {
+            margin: 0.25rem 0;
+            color: #d1d5db;
+            font-size: 0.875rem;
+        }
+
+        .university-info {
+            font-weight: 500;
+            color: #fbbf24;
+        }
+
+        /* Modal styles for about/team info */
+        .info-modal-content {
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .info-section {
+            margin-bottom: 2rem;
+        }
+
+        .info-section h3 {
+            color: #1e40af;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-section ul {
+            padding-left: 1.5rem;
+        }
+
+        .info-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .team-member {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+        }
+
+        .team-member h4 {
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-member p {
+            margin: 0.25rem 0;
+            color: #4b5563;
+        }
+
+        /* Language Selector Styles */
+        .language-selector {
+            position: relative;
+            display: inline-block;
+            z-index: 1001;
+        }
+
+        .language-btn {
+            background: #4F46E5;
+            border: 1px solid #4F46E5;
+            border-radius: 0.5rem;
+            color: white;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+        }
+
+        .language-btn:hover {
+            background: #3730A3;
+            border-color: #3730A3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+        }
+
+        .language-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid #e5e7eb;
+            min-width: 160px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .language-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: transparent;
+            color: #374151;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-radius: 0;
+        }
+
+        .language-option:first-child {
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+
+        .language-option:last-child {
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+        }
+
+        .language-option:hover {
+            background-color: #f3f4f6;
+        }
+
+        .language-option.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .flag-icon {
+            width: 20px;
+            height: 15px;
+            border-radius: 2px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                padding: 2rem 1rem;
+                gap: 1.5rem;
+            }
+
+            .footer-section {
+                text-align: center;
+            }
+
+            .project-lead {
+                margin: 0 auto;
+            }
+
+            .nav-menu {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                justify-content: center;
+            }
+
+            .language-selector {
+                order: -1;
+                margin-bottom: 0.5rem;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+
+            .language-menu {
+                right: auto;
+                left: 0;
+            }
+        }
     </style>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>EDUCE</h3>
+                <p>Uşaq Psixoloji Qiymətləndirmə Platforması</p>
+                <p class="footer-description">
+                    Uşaqların psixoloji inkişafını dəstəkləmək və ailələrə peşəkar psixoloji xidmətlərə çıxış imkanı yaratmaq məqsədilə hazırlanmışdır.
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h4 data-translate="footer_navigation">Naviqasiya</h4>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="showAboutModal()" data-translate="footer_about">Layihə Haqqında</a></li>
+                    <li><a href="#" onclick="showTeamModal()" data-translate="footer_team">Komanda</a></li>
+                    <li><a href="#" onclick="showContactModal()" data-translate="footer_contact">Əlaqə</a></li>
+                    <li><a href="customer-login.html" data-translate="footer_parent_login">Valideyn Girişi</a></li>
+                    <li><a href="login.html" data-translate="footer_psychologist_login">Psixoloq Girişi</a></li>
+                    <li><a href="register.html" data-translate="footer_register">Qeydiyyat</a></li>
+                    <li><a href="admin.html" data-translate="footer_admin">Admin Panel</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4 data-translate="footer_project_lead">Layihə Rəhbəri</h4>
+                <div class="project-lead">
+                    <div class="lead-info">
+                        <strong>Oğuz Məmmədov</strong>
+                        <p data-translate="footer_developer">Baş Developer və Layihə Meneceri</p>
+                        <p class="contact-info">📧 nsuenactus@gmail.com</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p data-translate="footer_rights">&copy; 2024 EDUCE Platform. Bütün hüquqlar qorunur.</p>
+            </div>
+        </div>
+    </footer>
+
     <!-- JavaScript -->
+    <script src="translations.js"></script>
     <script src="api-service.js"></script>
     <script src="script.js"></script>
 </body>

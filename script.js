@@ -30,7 +30,9 @@ function initializeWebsite() {
     initButtonAnimations();
     initScrollEffects();
     initNavbarScroll();
+    createDemoDataIfNeeded();
     checkCustomerLogin();
+    checkURLParameters();
 }
 
 // ========================================
@@ -556,27 +558,7 @@ window.addEventListener('unhandledrejection', function(event) {
 // Customer Profile Dropdown Functions
 // ========================================
 
-/**
- * Check customer login status and update navbar accordingly
- */
-function checkCustomerLogin() {
-    const customer = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}');
-    const profileDropdown = document.getElementById('profileDropdown');
-    const guestButtons = document.getElementById('guestButtons');
-    
-    if (customer.role === 'customer') {
-        // Show profile dropdown
-        if (profileDropdown) profileDropdown.style.display = 'inline-block';
-        if (guestButtons) guestButtons.style.display = 'none';
-        
-        // Update profile info
-        updateNavbarProfile(customer);
-    } else {
-        // Show guest buttons
-        if (profileDropdown) profileDropdown.style.display = 'none';
-        if (guestButtons) guestButtons.style.display = 'flex';
-    }
-}
+// Removed duplicate checkCustomerLogin function - using the better comprehensive one later in the file
 
 /**
  * Update navbar profile information
@@ -682,19 +664,7 @@ function updateNavbarChildrenList(customer) {
     navChildrenList.innerHTML = childrenHTML;
 }
 
-/**
- * Toggle profile dropdown menu
- */
-function toggleProfile() {
-    const profileMenu = document.getElementById('profileMenu');
-    if (!profileMenu) return;
-    
-    if (profileMenuOpen) {
-        closeProfileMenu();
-    } else {
-        openProfileMenu();
-    }
-}
+// Removed duplicate toggleProfile function - using the better one later in the file
 
 /**
  * Open profile dropdown menu
@@ -846,18 +816,20 @@ function closeAddChildModal() {
 /**
  * Handle Add Child Form Submission
  */
-function handleAddChildForm(event) {
+async function handleAddChildForm(event) {
     event.preventDefault();
     
     const formData = new FormData(event.target);
     const childData = {
-        id: Date.now(), // Simple ID generation
         name: formData.get('childName').trim(),
         age: parseInt(formData.get('childAge')),
         gender: formData.get('childGender'),
         grade: formData.get('childGrade').trim(),
-        interests: formData.get('childInterests').trim(),
+        interests: formData.get('childInterests') ? formData.get('childInterests').trim().split(',').map(i => i.trim()) : [],
         notes: formData.get('childNotes').trim(),
+        parentId: JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}').id,
+        parentEmail: JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}').email,
+        status: 'pending',
         addedDate: new Date().toISOString()
     };
     
@@ -867,7 +839,37 @@ function handleAddChildForm(event) {
         return;
     }
     
-    // Add child to customer's children array
+    // Show loading state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Adding...';
+    }
+    
+    try {
+        // Try to submit to server first
+        const response = await fetch('/api/children', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('EDUCE_token') || ''}`
+            },
+            body: JSON.stringify(childData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            childData.id = result.child.id;
+            console.log('✅ Child added via API:', result);
+        } else {
+            throw new Error('API submission failed');
+        }
+    } catch (error) {
+        console.log('📱 API unavailable, using localStorage fallback');
+        childData.id = Date.now(); // Fallback ID generation
+    }
+
+    // Always save to localStorage (for UI consistency and offline support)
     const customer = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}');
     if (!customer.children) {
         customer.children = [];
@@ -876,18 +878,33 @@ function handleAddChildForm(event) {
     // Check if child with same name already exists
     if (customer.children.some(child => child.name.toLowerCase() === childData.name.toLowerCase())) {
         alert('A child with this name already exists. Please use a different name.');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Add Child';
+        }
         return;
     }
     
     customer.children.push(childData);
     localStorage.setItem(STORAGE_KEYS.CUSTOMER, JSON.stringify(customer));
     
+    // Also save to global children list for admin panel
+    const allChildren = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHILDREN) || '[]');
+    allChildren.push(childData);
+    localStorage.setItem(STORAGE_KEYS.CHILDREN, JSON.stringify(allChildren));
+    
     // Close modal and refresh profile
     closeAddChildModal();
     updateNavbarProfile(customer);
     
-    // Show success message
-    showSuccessMessage(`${childData.name} has been added successfully!`);
+    // Show enhanced success message
+    showEnhancedNotification('success', 'Child Added!', `${childData.name} has been added to your profile successfully.`);
+    
+    // Reset button state
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Child';
+    }
 }
 
 /**
@@ -1898,28 +1915,339 @@ function populateReportsModal() {
  * Handle Start Now button click
  */
 function handleStartNow() {
+    console.log('🔥 HANDLE START NOW CLICKED!');
+    
+    try {
+        const customer = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}');
+        console.log('👤 Current customer:', customer);
+        console.log('🔍 Customer keys:', Object.keys(customer));
+        console.log('🔍 Customer has ID?', !!customer.id);
+        console.log('🔍 Customer has email?', !!customer.email);
+        console.log('🔍 Customer role:', customer.role);
+        
+        // Check if customer is logged in
+        if (!customer.role || customer.role !== 'customer') {
+            console.log('❌ Customer not logged in, redirecting to login...');
+            // Not logged in, redirect to login with start_now parameter
+            window.location.href = 'customer-login.html?start_now=true';
+            return;
+        }
+        
+        console.log('✅ Customer is logged in!');
+    } catch (error) {
+        console.error('❌ Error in handleStartNow:', error);
+        alert('Error occurred. Please check console.');
+        return;
+    }
+    
+    // Customer is logged in, show child selection first
+    console.log('🎯 Customer is logged in, showing child selection...');
+    showChildSelectionForStartNow();
+}
+
+/**
+ * Show child selection modal for Start Now flow
+ */
+function showChildSelectionForStartNow() {
+    const customer = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}');
+    const children = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHILDREN) || '[]');
+    
+    console.log('🔍 DEBUG - Customer data:', customer);
+    console.log('🔍 DEBUG - All children:', children);
+    console.log('🔍 DEBUG - Customer ID:', customer.id);
+    console.log('🔍 DEBUG - Customer Email:', customer.email);
+    
+    const customerChildren = children.filter(child => {
+        console.log(`🔍 Checking child ${child.name}: parentId=${child.parentId}, parentEmail=${child.parentEmail}`);
+        const matchById = customer.id && child.parentId === customer.id;
+        const matchByEmail = customer.email && child.parentEmail === customer.email;
+        const matchByIdAsEmail = customer.email && child.parentId === customer.email; // Fallback case
+        
+        console.log(`  - Match by ID: ${matchById}`);
+        console.log(`  - Match by Email: ${matchByEmail}`);
+        console.log(`  - Match by ID as Email: ${matchByIdAsEmail}`);
+        
+        return matchById || matchByEmail || matchByIdAsEmail;
+    });
+    
+    console.log('👶 Found children:', customerChildren.length);
+    console.log('👶 Customer children:', customerChildren);
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+    modal.style.zIndex = '9999';
+    modal.style.backdropFilter = 'blur(3px)';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 700px; margin: 2rem auto; max-height: 90vh; overflow-y: auto; background: white; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: modalSlideIn 0.3s ease-out;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); color: white; padding: 2rem; border-radius: 1rem 1rem 0 0;">
+                <h3 style="margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-child"></i> Select Child for Assessment
+                </h3>
+                <button class="modal-close" onclick="this.closest('.modal').remove()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
+                       onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'"
+                       onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.2)'">&times;</button>
+            </div>
+            
+            <div style="padding: 2rem;">
+                <p style="color: #6B7280; margin-bottom: 2rem; text-align: center;">
+                    Choose which child you'd like to get psychological assessment for, or add a new child.
+                </p>
+                
+                <!-- Existing Children -->
+                ${customerChildren.length > 0 ? `
+                    <div style="margin-bottom: 2rem;">
+                        <h4 style="color: #1F2937; margin-bottom: 1rem;">Your Children:</h4>
+                        <div style="display: grid; gap: 1rem;">
+                            ${customerChildren.map(child => `
+                                <div class="child-selection-card" style="background: #F9FAFB; border: 2px solid #E5E7EB; border-radius: 0.75rem; padding: 1.5rem; cursor: pointer; transition: all 0.3s ease;"
+                                     onclick="selectChildForAssessment('${child.id}'); this.closest('.modal').remove();"
+                                     onmouseover="this.style.borderColor='#2563EB'; this.style.backgroundColor='#EFF6FF'"
+                                     onmouseout="this.style.borderColor='#E5E7EB'; this.style.backgroundColor='#F9FAFB'">
+                                    
+                                    <div style="display: flex; align-items: center; gap: 1.5rem;">
+                                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.2rem;">
+                                            ${child.name.split(' ').map(n => n[0]).join('')}
+                                        </div>
+                                        
+                                        <div style="flex: 1;">
+                                            <h5 style="margin: 0 0 0.5rem 0; color: #1F2937; font-size: 1.1rem;">${child.name}</h5>
+                                            <p style="margin: 0 0 0.5rem 0; color: #6B7280;">${child.age} years old • ${child.grade}</p>
+                                            
+                                            ${child.psychologistId ? `
+                                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                                                    <span class="status-badge status-${child.status || 'pending'}" style="font-size: 0.75rem;">
+                                                        ${child.status === 'accepted' ? '✅ Assessment Approved' : 
+                                                          child.status === 'pending' ? '⏳ Pending Approval' : 
+                                                          child.status === 'completed' ? '🎯 Assessment Complete' : 
+                                                          '📋 Ready for Assessment'}
+                                                    </span>
+                                                </div>
+                                            ` : '<p style="margin: 0; color: #10B981; font-size: 0.875rem; font-weight: 500;">🆕 Ready for new assessment</p>'}
+                                        </div>
+                                        
+                                        <div style="color: #2563EB; font-size: 1.5rem;">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- Add New Child Option -->
+                <div style="border-top: ${customerChildren.length > 0 ? '1px solid #E5E7EB; padding-top: 2rem;' : ''}">
+                    <div class="add-child-card" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 0.75rem; padding: 2rem; cursor: pointer; transition: all 0.3s ease; color: white;"
+                         onclick="showAddChildForAssessment(); this.closest('.modal').remove();"
+                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(16, 185, 129, 0.3)'"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        
+                        <div style="display: flex; align-items: center; gap: 1.5rem;">
+                            <div style="width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            
+                            <div style="flex: 1;">
+                                <h5 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">Add New Child</h5>
+                                <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">Register a new child for psychological assessment</p>
+                            </div>
+                            
+                            <div style="font-size: 1.5rem; opacity: 0.8;">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                ${customerChildren.length === 0 ? `
+                    <div style="text-align: center; margin-top: 2rem; color: #6B7280;">
+                        <i class="fas fa-info-circle" style="font-size: 1.2rem; margin-bottom: 0.5rem;"></i>
+                        <p style="margin: 0;">You haven't added any children yet. Click "Add New Child" to get started!</p>
+                        <div style="margin-top: 1rem; font-size: 0.875rem; color: #9CA3AF;">
+                            <p>Debug info: Found ${children.length} total children in system</p>
+                            <p>Customer ID: ${customer.id || 'N/A'}</p>
+                            <p>Customer Email: ${customer.email || 'N/A'}</p>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+/**
+ * Select child for assessment and proceed to psychologist selection
+ */
+function selectChildForAssessment(childId) {
+    console.log('🎯 Child selected for assessment:', childId);
+    
+    // Debug: Check if child exists
+    const children = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHILDREN) || '[]');
+    const selectedChild = children.find(c => c.id === childId);
+    console.log('🔍 Selected child data:', selectedChild);
+    
+    if (!selectedChild) {
+        console.error('❌ Child not found with ID:', childId);
+        alert('Child not found! Please refresh and try again.');
+        return;
+    }
+    
+    // Store selected child for the assessment flow
+    sessionStorage.setItem('selectedChildForAssessment', childId);
+    
+    console.log('🚀 Proceeding to psychologist selection...');
+    
+    // Show psychologist selection modal
+    showPsychologistSelectionModal(childId);
+}
+
+/**
+ * Show add child modal for assessment flow
+ */
+function showAddChildForAssessment() {
+    console.log('➕ Adding new child for assessment...');
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+    modal.style.zIndex = '9999';
+    modal.style.backdropFilter = 'blur(3px)';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px; margin: 2rem auto; max-height: 90vh; overflow-y: auto; background: white; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: modalSlideIn 0.3s ease-out;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 2rem; border-radius: 1rem 1rem 0 0;">
+                <h3 style="margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-child"></i> Add New Child
+                </h3>
+                <button class="modal-close" onclick="this.closest('.modal').remove()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
+                       onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'"
+                       onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.2)'">&times;</button>
+            </div>
+            
+            <div style="padding: 2rem;">
+                <form id="assessmentAddChildForm" onsubmit="handleAssessmentAddChildForm(event)">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #374151; font-weight: 500;">
+                            Child's Name <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input type="text" name="childName" required 
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 1rem;"
+                               placeholder="Enter child's full name">
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #374151; font-weight: 500;">
+                            Age <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input type="number" name="childAge" required min="3" max="18"
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 1rem;"
+                               placeholder="Enter child's age">
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #374151; font-weight: 500;">
+                            Grade/Class <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input type="text" name="childGrade" required
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 1rem;"
+                               placeholder="e.g., 1st Grade, Kindergarten">
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #374151; font-weight: 500;">
+                            Special Notes (Optional)
+                        </label>
+                        <textarea name="childNotes" rows="3"
+                                  style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 1rem; resize: vertical;"
+                                  placeholder="Any special considerations, interests, or concerns..."></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Child & Continue
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+/**
+ * Handle add child form for assessment flow
+ */
+function handleAssessmentAddChildForm(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
     const customer = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}');
     
-    // Check if customer is logged in
-    if (!customer.role || customer.role !== 'customer') {
-        // Not logged in, redirect to login with start_now parameter
-        window.location.href = 'customer-login.html?start_now=true';
-        return;
-    }
+    console.log('🔍 Adding child - Customer data:', customer);
+    console.log('🔍 Customer ID for child:', customer.id);
+    console.log('🔍 Customer email for child:', customer.email);
     
-    // Customer is logged in, check if they have children
+    // Create new child object
+    const newChild = {
+        id: 'child_' + Date.now(),
+        name: formData.get('childName').trim(),
+        age: parseInt(formData.get('childAge')),
+        grade: formData.get('childGrade').trim(),
+        notes: formData.get('childNotes')?.trim() || '',
+        parentId: customer.id || customer.email, // Fallback to email if no ID
+        parentEmail: customer.email,
+        status: 'available',
+        createdAt: new Date().toISOString()
+    };
+    
+    console.log('🔍 New child object:', newChild);
+    
+    // Add to storage
     const children = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHILDREN) || '[]');
-    const customerChildren = children.filter(child => child.parentId === customer.id || child.parentEmail === customer.email);
+    children.push(newChild);
+    localStorage.setItem(STORAGE_KEYS.CHILDREN, JSON.stringify(children));
     
-    if (customerChildren.length === 0) {
-        // No children, show add child modal first
-        showStartWithAddChild();
-        return;
-    }
+    console.log('✅ New child added for assessment:', newChild.name);
     
-    // Has children, show psychologist selection modal
-    console.log('🎯 Customer has children, showing psychologist selection...');
-    showPsychologistSelectionModal();
+    // Close modal
+    event.target.closest('.modal').remove();
+    
+    // Show success message and proceed to psychologist selection
+    setTimeout(() => {
+        showEnhancedNotification(
+            'success',
+            'Child Added Successfully!',
+            `${newChild.name} has been added to your children list. Now please select a psychologist for their assessment.`,
+            4000
+        );
+        
+        console.log('🎯 New child added, proceeding to psychologist selection for ID:', newChild.id);
+        
+        // Proceed to psychologist selection for this child
+        setTimeout(() => {
+            console.log('🔄 Refreshing child selection after new child added...');
+            // First, refresh the child selection modal to show the new child
+            showChildSelectionForStartNow();
+        }, 1000); // Show child selection again with the new child
+    }, 300);
 }
 
 /**
@@ -2099,6 +2427,13 @@ function checkCustomerLogin() {
     
     if (currentCustomer) {
         console.log('✅ Customer logged in:', currentCustomer.email);
+        
+        // Ensure customer is saved in the standard format for editProfile
+        if (!customer.role || customer.role !== 'customer') {
+            localStorage.setItem(STORAGE_KEYS.CUSTOMER, JSON.stringify(currentCustomer));
+            console.log('🔄 Synced customer to standard storage format');
+        }
+        
         updateNavbarProfile(currentCustomer);
         hideGuestButtons();
     } else {
@@ -2122,7 +2457,7 @@ function updateNavbarProfile(customer) {
     }
     
     // Show profile dropdown
-    profileDropdown.style.display = 'block';
+    showProfileDropdown();
     
     // Update user info
     const fullName = customer.firstName && customer.lastName ? 
@@ -2222,10 +2557,20 @@ function loadCustomerProfileData(customer) {
  */
 function toggleProfile() {
     const profileMenu = document.getElementById('profileMenu');
-    if (!profileMenu) return;
+    if (!profileMenu) {
+        console.log('⚠️ Profile menu element not found');
+        return;
+    }
     
     profileMenuOpen = !profileMenuOpen;
-    profileMenu.style.display = profileMenuOpen ? 'block' : 'none';
+    
+    if (profileMenuOpen) {
+        profileMenu.classList.add('active');
+        console.log('✅ Profile menu opened');
+    } else {
+        profileMenu.classList.remove('active');
+        console.log('✅ Profile menu closed');
+    }
 }
 
 /**
@@ -2233,8 +2578,24 @@ function toggleProfile() {
  */
 function hideProfileDropdown() {
     const profileDropdown = document.getElementById('profileDropdown');
+    const profileMenu = document.getElementById('profileMenu');
+    
     if (profileDropdown) {
         profileDropdown.style.display = 'none';
+    }
+    if (profileMenu) {
+        profileMenu.classList.remove('active');
+        profileMenuOpen = false;
+    }
+}
+
+/**
+ * Show profile dropdown
+ */
+function showProfileDropdown() {
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown) {
+        profileDropdown.style.display = 'block';
     }
 }
 
@@ -2263,17 +2624,379 @@ function hideGuestButtons() {
  */
 function logoutCustomer() {
     if (confirm('Are you sure you want to logout?')) {
+        // Clear customer data
         localStorage.removeItem(STORAGE_KEYS.CUSTOMER);
         localStorage.removeItem('EDUCE_customer');
-        window.location.reload();
+        sessionStorage.clear();
+        
+        // Show logout notification
+        showEnhancedNotification(
+            'success',
+            'Logged Out Successfully',
+            'You have been safely logged out. Thank you for using EDUCE!',
+            3000
+        );
+        
+        // Reload page after short delay
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
     }
 }
 
 /**
- * Edit customer profile
+ * Edit customer profile - show comprehensive profile modal
  */
-function editCustomerProfile() {
-    alert('Profile editing functionality will be implemented soon.');
+function editProfile() {
+    const customer = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}');
+    
+    if (!customer.role || customer.role !== 'customer') {
+        alert('Please login first to view your profile.');
+        return;
+    }
+    
+    showCustomerProfileModal(customer);
+}
+
+/**
+ * Show comprehensive customer profile modal
+ */
+function showCustomerProfileModal(customer) {
+    const children = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHILDREN) || '[]');
+    const customerChildren = children.filter(child => {
+        return (customer.id && child.parentId === customer.id) || 
+               (customer.email && child.parentEmail === customer.email) ||
+               (customer.email && child.parentId === customer.email);
+    });
+    
+    const requests = JSON.parse(localStorage.getItem(STORAGE_KEYS.REQUESTS) || '[]');
+    const customerRequests = requests.filter(req => req.parentEmail === customer.email || req.customerId === customer.id);
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+    modal.style.zIndex = '9999';
+    modal.style.backdropFilter = 'blur(3px)';
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 1000px; margin: 2rem auto; max-height: 90vh; overflow-y: auto; background: white; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: modalSlideIn 0.3s ease-out;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; padding: 2rem; border-radius: 1rem 1rem 0 0;">
+                <h3 style="margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-user-circle"></i> My Profile
+                </h3>
+                <button class="modal-close" onclick="this.closest('.modal').remove()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
+                       onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'"
+                       onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.2)'">&times;</button>
+            </div>
+            
+            <div style="padding: 2rem;">
+                ${generateProfileContent(customer, customerChildren, customerRequests)}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+/**
+ * Generate profile content HTML
+ */
+function generateProfileContent(customer, customerChildren, customerRequests) {
+    const gameResults = JSON.parse(localStorage.getItem(STORAGE_KEYS.GAME_RESULTS) || '[]');
+    const analyses = JSON.parse(localStorage.getItem('educe_analyses') || '[]');
+    
+    return `
+        <!-- Profile Info Section -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <!-- Personal Info -->
+            <div>
+                <h4 style="color: #1F2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-user"></i> Personal Information
+                </h4>
+                <div style="background: #F9FAFB; border-radius: 0.75rem; padding: 1.5rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.25rem;">Full Name</label>
+                        <p style="margin: 0; padding: 0.75rem; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem;">${customer.name || 'Not specified'}</p>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.25rem;">Email Address</label>
+                        <p style="margin: 0; padding: 0.75rem; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem;">${customer.email || 'Not specified'}</p>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.25rem;">Phone Number</label>
+                        <p style="margin: 0; padding: 0.75rem; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem;">${customer.phone || 'Not specified'}</p>
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.25rem;">Member Since</label>
+                        <p style="margin: 0; padding: 0.75rem; background: white; border: 1px solid #E5E7EB; border-radius: 0.5rem;">${customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : 'Unknown'}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics -->
+            <div>
+                <h4 style="color: #1F2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-chart-bar"></i> Statistics
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #3B82F6, #2563EB); color: white; padding: 1.5rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem;">${customerChildren.length}</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">Children</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 1.5rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem;">${customerRequests.filter(r => r.status === 'completed').length}</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">Completed</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #F59E0B, #D97706); color: white; padding: 1.5rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem;">${customerRequests.filter(r => r.status === 'pending').length}</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">Pending</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #8B5CF6, #7C3AED); color: white; padding: 1.5rem; border-radius: 0.75rem; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem;">${analyses.filter(a => customerChildren.some(c => c.id === a.childId)).length}</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">Analyses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        ${generateChildrenSection(customerChildren, customerRequests, gameResults, analyses)}
+        
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
+            <button class="btn btn-primary" onclick="showEditProfileForm('${customer.id || customer.email}'); this.closest('.modal').remove();">
+                <i class="fas fa-user-edit"></i> Edit Profile
+            </button>
+            <button class="btn btn-outline" onclick="viewAllReports(); this.closest('.modal').remove();">
+                <i class="fas fa-chart-bar"></i> View All Reports
+            </button>
+            <button class="btn btn-outline" onclick="handleStartNow(); this.closest('.modal').remove();">
+                <i class="fas fa-rocket"></i> Start Assessment
+            </button>
+            <button class="btn btn-secondary" onclick="if(confirm('Are you sure you want to logout?')) { logoutCustomer(); this.closest('.modal').remove(); }">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    `;
+}
+
+/**
+ * Generate children section HTML
+ */
+function generateChildrenSection(customerChildren, customerRequests, gameResults, analyses) {
+    return `
+        <!-- Children Section -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="color: #1F2937; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                <span style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-children"></i> My Children (${customerChildren.length})
+                </span>
+                <button class="btn btn-primary btn-small" onclick="showAddChildForAssessment(); this.closest('.modal').remove();">
+                    <i class="fas fa-plus"></i> Add Child
+                </button>
+            </h4>
+            
+            ${customerChildren.length > 0 ? `
+                <div style="display: grid; gap: 1rem;">
+                    ${customerChildren.map(child => {
+                        const childRequests = customerRequests.filter(r => r.childId === child.id);
+                        const childGameResults = gameResults.filter(r => r.childId === child.id);
+                        const childAnalyses = analyses.filter(a => a.childId === child.id);
+                        
+                        return `
+                            <div style="background: #F9FAFB; border-radius: 0.75rem; padding: 1.5rem; border: 1px solid #E5E7EB;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                            ${child.name.split(' ').map(n => n[0]).join('')}
+                                        </div>
+                                        <div>
+                                            <h5 style="margin: 0 0 0.25rem 0; color: #1F2937;">${child.name}</h5>
+                                            <p style="margin: 0; color: #6B7280; font-size: 0.875rem;">${child.age} years old • ${child.grade}</p>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-outline btn-small" onclick="viewChildReport('${child.id}'); this.closest('.modal').remove();">
+                                            <i class="fas fa-eye"></i> View Report
+                                        </button>
+                                        <button class="btn btn-primary btn-small" onclick="selectPsychologistForChild('${child.id}'); this.closest('.modal').remove();">
+                                            <i class="fas fa-user-md"></i> Select Psychologist
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                    <div style="text-align: center; padding: 0.75rem; background: white; border-radius: 0.5rem;">
+                                        <div style="font-weight: 600; color: #3B82F6;">${childGameResults.length}</div>
+                                        <div style="font-size: 0.75rem; color: #6B7280;">Tests</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 0.75rem; background: white; border-radius: 0.5rem;">
+                                        <div style="font-weight: 600; color: #10B981;">${childAnalyses.length}</div>
+                                        <div style="font-size: 0.75rem; color: #6B7280;">Analyses</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 0.75rem; background: white; border-radius: 0.5rem;">
+                                        <div style="font-weight: 600; color: ${child.status === 'completed' ? '#10B981' : child.status === 'pending' ? '#F59E0B' : '#6B7280'};">
+                                            ${child.status === 'completed' ? 'Done' : 
+                                              child.status === 'pending' ? 'Pending' : 
+                                              child.status === 'accepted' ? 'Approved' : 'Ready'}
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: #6B7280;">Status</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            ` : `
+                <div style="text-align: center; padding: 3rem; background: #F9FAFB; border-radius: 0.75rem; border: 2px dashed #D1D5DB;">
+                    <i class="fas fa-child" style="font-size: 3rem; color: #9CA3AF; margin-bottom: 1rem;"></i>
+                    <h4 style="color: #6B7280; margin: 0 0 0.5rem 0;">No Children Added Yet</h4>
+                    <p style="color: #9CA3AF; margin: 0 0 1.5rem 0;">Add your first child to start psychological assessments</p>
+                    <button class="btn btn-primary" onclick="showAddChildForAssessment(); this.closest('.modal').remove();">
+                        <i class="fas fa-plus"></i> Add Your First Child
+                    </button>
+                </div>
+            `}
+        </div>
+    `;
+}
+
+/**
+ * Show edit profile form
+ */
+function showEditProfileForm(customerId) {
+    const customer = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}');
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+    modal.style.zIndex = '9999';
+    modal.style.backdropFilter = 'blur(3px)';
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px; margin: 2rem auto; max-height: 90vh; overflow-y: auto; background: white; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: modalSlideIn 0.3s ease-out;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 2rem; border-radius: 1rem 1rem 0 0;">
+                <h3 style="margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-user-edit"></i> Edit Profile
+                </h3>
+                <button class="modal-close" onclick="this.closest('.modal').remove()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
+                       onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'"
+                       onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.2)'">&times;</button>
+            </div>
+            
+            <div style="padding: 2rem;">
+                <form id="editProfileForm" onsubmit="handleEditProfileForm(event, '${customerId}')">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #374151; font-weight: 500;">
+                            Full Name <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input type="text" name="name" required value="${customer.name || ''}"
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 1rem;"
+                               placeholder="Enter your full name">
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #374151; font-weight: 500;">
+                            Email Address <span style="color: #EF4444;">*</span>
+                        </label>
+                        <input type="email" name="email" required value="${customer.email || ''}"
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 1rem;"
+                               placeholder="Enter your email address">
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #374151; font-weight: 500;">
+                            Phone Number
+                        </label>
+                        <input type="tel" name="phone" value="${customer.phone || ''}"
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; font-size: 1rem;"
+                               placeholder="Enter your phone number">
+                    </div>
+                    
+                    <div style="background: #F0F9FF; border: 1px solid #0EA5E9; border-radius: 0.5rem; padding: 1rem; margin-bottom: 2rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-info-circle" style="color: #0EA5E9;"></i>
+                            <strong style="color: #0C4A6E;">Account Information</strong>
+                        </div>
+                        <p style="margin: 0; color: #0C4A6E; font-size: 0.875rem;">
+                            Member since: ${customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : 'Unknown'}
+                        </p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+/**
+ * Handle edit profile form submission
+ */
+function handleEditProfileForm(event, customerId) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const customer = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMER) || '{}');
+    
+    // Update customer data
+    const updatedCustomer = {
+        ...customer,
+        name: formData.get('name').trim(),
+        email: formData.get('email').trim(),
+        phone: formData.get('phone').trim(),
+        updatedAt: new Date().toISOString()
+    };
+    
+    // Save updated customer
+    localStorage.setItem(STORAGE_KEYS.CUSTOMER, JSON.stringify(updatedCustomer));
+    
+    // Update customer in customers list if exists
+    const customers = JSON.parse(localStorage.getItem('EDUCE_customers') || '[]');
+    const customerIndex = customers.findIndex(c => c.id === customer.id || c.email === customer.email);
+    if (customerIndex !== -1) {
+        customers[customerIndex] = updatedCustomer;
+        localStorage.setItem('EDUCE_customers', JSON.stringify(customers));
+    }
+    
+    // Close modal
+    event.target.closest('.modal').remove();
+    
+    // Show success notification
+    showEnhancedNotification(
+        'success',
+        'Profile Updated',
+        'Your profile information has been successfully updated.',
+        4000
+    );
+    
+    // Refresh navbar
+    checkCustomerLogin();
+    
+    // Show updated profile modal after delay
+    setTimeout(() => {
+        showCustomerProfileModal(updatedCustomer);
+    }, 1000);
 }
 
 /**
@@ -2516,9 +3239,27 @@ function selectPsychologistForChild(childId) {
  * Show psychologist selection modal
  */
 function showPsychologistSelectionModal(selectedChild = null) {
+    // Handle both child object and child ID
+    let child = selectedChild;
+    if (typeof selectedChild === 'string') {
+        // It's a child ID, find the child object
+        const children = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHILDREN) || '[]');
+        child = children.find(c => c.id === selectedChild);
+        
+        if (!child) {
+            console.error('❌ Child not found with ID:', selectedChild);
+            alert('Child not found. Please try again.');
+            return;
+        }
+        
+        console.log('✅ Found child:', child.name);
+    }
+    
     // Get approved psychologists
     const psychologists = JSON.parse(localStorage.getItem('EDUCE_psychologists') || '[]');
     const approvedPsychologists = psychologists.filter(p => p.approved === true);
+    
+    console.log('👨‍⚕️ Found approved psychologists:', approvedPsychologists.length);
     
     if (approvedPsychologists.length === 0) {
         alert('No approved psychologists available at the moment. Please try again later.');
@@ -2528,11 +3269,23 @@ function showPsychologistSelectionModal(selectedChild = null) {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.style.display = 'block';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+    modal.style.zIndex = '9999';
+    modal.style.backdropFilter = 'blur(3px)';
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h3><i class="fas fa-user-md"></i> Choose a Psychologist${selectedChild ? ` for ${selectedChild.name}` : ''}</h3>
-                <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+        <div class="modal-content" style="max-width: 900px; margin: 2rem auto; max-height: 90vh; overflow-y: auto; background: white; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: modalSlideIn 0.3s ease-out;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 2rem; border-radius: 1rem 1rem 0 0;">
+                <h3 style="margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-user-md"></i> Choose a Psychologist${child ? ` for ${child.name}` : ''}
+                </h3>
+                <button class="modal-close" onclick="this.closest('.modal').remove()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
+                       onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'"
+                       onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.2)'">&times;</button>
             </div>
             
             <div style="padding: 2rem;">
@@ -2707,12 +3460,21 @@ function createAssessmentRequest(childId, psychologistId) {
     const newRequest = {
         id: 'req_' + Date.now(),
         childId: childId,
+        childName: child.name,
+        childAge: child.age,
         parentId: customer.id,
         parentEmail: customer.email,
+        customerId: customer.id,
+        customerName: customer.name,
+        customerEmail: customer.email,
         psychologistId: psychologistId,
+        psychologistName: psychologist.name,
         status: 'pending',
         createdAt: new Date().toISOString(),
-        message: `Assessment request for ${child.name} (${child.age} years old)`
+        requestDate: new Date().toISOString(),
+        message: `Assessment request for ${child.name} (${child.age} years old)`,
+        childInterests: child.interests || child.notes || '',
+        childNotes: child.notes || ''
     };
     
     requests.push(newRequest);
@@ -2726,13 +3488,450 @@ function createAssessmentRequest(childId, psychologistId) {
         localStorage.setItem(STORAGE_KEYS.CHILDREN, JSON.stringify(children));
     }
     
-    alert(`✅ Assessment request sent to Dr. ${psychologist.name} for ${child.name}. 
-    
-You will be notified when the psychologist accepts the request and schedules the assessment.`);
-    
     // Refresh profile data
     checkCustomerLogin();
+    
+    // Show enhanced success notification
+    showEnhancedNotification(
+        'success',
+        'Assessment Request Sent!',
+        `Your request has been sent to Dr. ${psychologist.name} for ${child.name}'s psychological assessment. You will be notified when the psychologist responds.`,
+        8000
+    );
 }
+
+/**
+ * Show enhanced notification
+ */
+function showEnhancedNotification(type, title, message, duration = 5000) {
+    // Remove existing notifications
+    document.querySelectorAll('.enhanced-notification').forEach(n => n.remove());
+    
+    const notification = document.createElement('div');
+    notification.className = `enhanced-notification notification-${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        max-width: 400px;
+        padding: 1.5rem;
+        background: ${type === 'success' ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : 
+                     type === 'error' ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' :
+                     'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'};
+        color: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        animation: slideInFromRight 0.4s ease-out;
+        backdrop-filter: blur(10px);
+    `;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+            <div style="flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                                type === 'error' ? 'fa-exclamation-circle' : 
+                                'fa-info-circle'}" style="font-size: 1.2rem;"></i>
+            </div>
+            <div style="flex: 1;">
+                <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 600;">${title}</h4>
+                <p style="margin: 0; font-size: 0.875rem; opacity: 0.95; line-height: 1.4;">${message}</p>
+            </div>
+            <button onclick="this.closest('.enhanced-notification').remove()" 
+                    style="background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; flex-shrink: 0;"
+                    onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'"
+                    onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.2)'">×</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after duration
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOutToRight 0.3s ease-out forwards';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, duration);
+}
+
+/**
+ * Create demo data if needed for offline functionality
+ */
+function createDemoDataIfNeeded() {
+    // Create demo psychologists if none exist
+    const psychologists = JSON.parse(localStorage.getItem('EDUCE_psychologists') || '[]');
+    
+    if (psychologists.length === 0) {
+        const demoPsychologists = [
+            {
+                id: 'psych_1',
+                name: 'Dr. Sarah Johnson',
+                email: 'sarah.johnson@educe.com',
+                specialization: 'Child Psychology',
+                experience: '8+ years',
+                rating: '4.9',
+                completed_assessments: '150+',
+                approved: true,
+                phone: '+1-555-0101',
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'psych_2',
+                name: 'Dr. Michael Chen',
+                email: 'michael.chen@educe.com',
+                specialization: 'Developmental Psychology',
+                experience: '6+ years',
+                rating: '4.8',
+                completed_assessments: '120+',
+                approved: true,
+                phone: '+1-555-0102',
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'psych_3',
+                name: 'Dr. Emily Rodriguez',
+                email: 'emily.rodriguez@educe.com',
+                specialization: 'Educational Psychology',
+                experience: '10+ years',
+                rating: '4.9',
+                completed_assessments: '200+',
+                approved: true,
+                phone: '+1-555-0103',
+                created_at: new Date().toISOString()
+            },
+            {
+                id: 'psych_4',
+                name: 'Dr. James Wilson',
+                email: 'james.wilson@educe.com',
+                specialization: 'Behavioral Psychology',
+                experience: '5+ years',
+                rating: '4.7',
+                completed_assessments: '80+',
+                approved: false, // Not approved yet
+                phone: '+1-555-0104',
+                created_at: new Date().toISOString()
+            }
+        ];
+        
+        localStorage.setItem('EDUCE_psychologists', JSON.stringify(demoPsychologists));
+        console.log('✅ Demo psychologists created for offline functionality');
+    }
+    
+    // Ensure all other storage keys exist
+    if (!localStorage.getItem(STORAGE_KEYS.CHILDREN)) {
+        localStorage.setItem(STORAGE_KEYS.CHILDREN, '[]');
+    }
+    
+    if (!localStorage.getItem(STORAGE_KEYS.REQUESTS)) {
+        localStorage.setItem(STORAGE_KEYS.REQUESTS, '[]');
+    }
+    
+    if (!localStorage.getItem(STORAGE_KEYS.GAME_RESULTS)) {
+        localStorage.setItem(STORAGE_KEYS.GAME_RESULTS, '[]');
+    }
+    
+    if (!localStorage.getItem('educe_analyses')) {
+        localStorage.setItem('educe_analyses', '[]');
+    }
+    
+    if (!localStorage.getItem('EDUCE_customers')) {
+        localStorage.setItem('EDUCE_customers', '[]');
+    }
+    
+    // Create demo customer if none exists (for testing)
+    // Demo customer creation disabled for production
+    // Users should register normally instead of using demo data
+    console.log('✅ Demo data creation skipped - users should register normally');
+}
+
+// Test function to check if script is loaded
+window.testScript = function() {
+    console.log('✅ Script is loaded and working!');
+    alert('Script is working!');
+};
+
+// Debug localStorage function
+window.debugStorage = function() {
+    console.log('🔍 DEBUG: LocalStorage Contents:');
+    console.log('- Customer (STORAGE_KEYS):', localStorage.getItem(STORAGE_KEYS.CUSTOMER));
+    console.log('- Customer (EDUCE):', localStorage.getItem('EDUCE_customer'));
+    console.log('- Children:', localStorage.getItem(STORAGE_KEYS.CHILDREN));
+    console.log('- Psychologists:', localStorage.getItem('EDUCE_psychologists'));
+    console.log('- Requests:', localStorage.getItem(STORAGE_KEYS.REQUESTS));
+    
+    const customer1 = localStorage.getItem(STORAGE_KEYS.CUSTOMER);
+    const customer2 = localStorage.getItem('EDUCE_customer');
+    
+    let message = 'Debug info logged to console!\n\n';
+    if (customer1) message += '✅ Customer (educe_customer) exists\n';
+    if (customer2) message += '✅ Customer (EDUCE_customer) exists\n';
+    if (!customer1 && !customer2) message += '❌ No customer found in any format\n';
+    
+    alert(message);
+};
+
+// Clear all data function
+window.clearAllData = function() {
+    if (confirm('Are you sure you want to clear all data? This will log you out.')) {
+        localStorage.clear();
+        sessionStorage.clear();
+        alert('All data cleared! Please refresh the page.');
+        location.reload();
+    }
+};
+
+// About Modal Function
+function showAboutModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content info-modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-info-circle"></i> EDUCE Haqqında</h2>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h3>🎯 Layihənin Məqsədi</h3>
+                    <p><strong>EDUCE</strong> (Educational Development and Understanding through Comprehensive Evaluation) platforması uşaqların psixoloji inkişafını dəstəkləmək və ailələrə peşəkar psixoloji xidmətlərə çıxış imkanı yaratmaq məqsədilə hazırlanmışdır.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>⚡ Əsas Xüsusiyyətlər</h3>
+                    <ul>
+                        <li><strong>Erkən Müdaxilə:</strong> Uşaqlarda psixoloji problemlərin erkən aşkarlanması</li>
+                        <li><strong>Peşəkar Dəstək:</strong> Kvalifisiyalı psixoloqlarla əlaqə qurulması</li>
+                        <li><strong>Məlumat İdarəetməsi:</strong> Qiymətləndirmə nəticələrinin sistematik saxlanması</li>
+                        <li><strong>Ailə Dəstəyi:</strong> Valideyinlərə uşaqlarının inkişafı haqqında məlumat verilməsi</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>🛠️ Texniki Spesifikasiyalar</h3>
+                    <ul>
+                        <li><strong>Backend:</strong> Node.js, Express.js, SQLite, JWT Authentication</li>
+                        <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript ES6+, Responsive Design</li>
+                        <li><strong>Təhlükəsizlik:</strong> bcrypt şifrə hashlənməsi, Role-based access control</li>
+                        <li><strong>Məlumat Bazası:</strong> SQLite ilə 15+ cədvəl</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>👥 İstifadəçi Növləri</h3>
+                    <ul>
+                        <li><strong>🏠 Valideyinlər:</strong> Uşaqlarını qeydiyyatdan keçirir və psixoloq seçir</li>
+                        <li><strong>👨‍⚕️ Psixoloqlar:</strong> Qiymətləndirmə sorğularını idarə edir</li>
+                        <li><strong>👨‍💼 Administratorlar:</strong> Sistemi idarə edir və istifadəçiləri təsdiqləyir</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i> Bağla
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Team Modal Function
+function showTeamModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content info-modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-users"></i> Layihə Komandası</h2>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h3>👨‍💼 Layihə Rəhbəri</h3>
+                    <div class="team-member">
+                        <h4>Oğuz Məmmədov</h4>
+                        <p><strong>Vəzifə:</strong> Baş Developer və Layihə Meneceri</p>
+                        <p><strong>Məsuliyyətlər:</strong></p>
+                        <ul>
+                            <li>Layihə Menecmenti və Planlaşdırma</li>
+                            <li>Full-Stack Development (Frontend + Backend)</li>
+                            <li>Məlumat Bazası Dizaynı və Optimallaşdırılması</li>
+                            <li>Sistem Arxitekturası və Təhlükəsizlik</li>
+                            <li>DevOps və Deploy Prosesləri</li>
+                            <li>Kod Keyfiyyəti və Test Strategiyası</li>
+                        </ul>
+                        <p><strong>Texniki Bacarıqlar:</strong></p>
+                        <ul>
+                            <li>Node.js, Express.js, SQLite, PostgreSQL</li>
+                            <li>HTML5, CSS3, JavaScript ES6+</li>
+                            <li>JWT Authentication, bcrypt Security</li>
+                            <li>Responsive Web Design</li>
+                            <li>Git, npm, REST API Design</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📊 Layihə Statistikaları</h3>
+                    <ul>
+                        <li><strong>Backend:</strong> ~1200 sətir JavaScript/Node.js kodu</li>
+                        <li><strong>Frontend:</strong> ~2000 sətir HTML/CSS/JavaScript kodu</li>
+                        <li><strong>Məlumat Bazası:</strong> 15+ cədvəl</li>
+                        <li><strong>API Endpoints:</strong> 20+ endpoint</li>
+                        <li><strong>Səhifələr:</strong> 8 əsas səhifə</li>
+                        <li><strong>İnkişaf Müddəti:</strong> 12 həftə</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>🏆 Layihə Nailiyyətləri</h3>
+                    <ul>
+                        <li>✅ Tam funksional backend API sistemi</li>
+                        <li>✅ İntuitive və responsive frontend interfeysi</li>
+                        <li>✅ PostgreSQL-dən SQLite-a uğurlu migrasiya</li>
+                        <li>✅ Role-based authentication sistemi</li>
+                        <li>✅ Real-time data synchronization</li>
+                        <li>✅ Comprehensive admin panel</li>
+                        <li>✅ Psychologist-parent interaction system</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i> Bağla
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Contact Modal Function
+function showContactModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content info-modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-envelope"></i> Əlaqə Məlumatları</h2>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h3>👨‍💼 Layihə Rəhbəri</h3>
+                    <div class="team-member">
+                        <h4>Oğuz Məmmədov</h4>
+                        <p><strong>Vəzifə:</strong> Baş Developer və Layihə Meneceri</p>
+                        <p><strong>📧 Email:</strong> <a href="mailto:nsuenactus@gmail.com">nsuenactus@gmail.com</a></p>
+                        <p><strong>🏢 Təşkilat:</strong> ADA University</p>
+                        <p><strong>📍 Yer:</strong> Bakı, Azərbaycan</p>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>🏫 Təhsil Müəssisəsi</h3>
+                    <p><strong>ADA University</strong></p>
+                    <p>Bu layihə ADA University çərçivəsində təhsil məqsədilə hazırlanmışdır və gələcəkdə real istifadə üçün genişləndirilə bilər.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📞 Əlaqə Üçün</h3>
+                    <ul>
+                        <li><strong>Texniki Dəstək:</strong> Layihə haqqında suallar üçün</li>
+                        <li><strong>Əməkdaşlıq:</strong> Layihənin inkişafında iştirak üçün</li>
+                        <li><strong>Feedback:</strong> Təkliflər və şərhlər üçün</li>
+                        <li><strong>Bug Reports:</strong> Texniki problemlər haqqında məlumat üçün</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>⚡ Cavab Müddəti</h3>
+                    <p>Bütün sorğular 24-48 saat ərzində cavablandırılacaq.</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i> Bağla
+                </button>
+                <button class="btn btn-primary" onclick="window.open('mailto:nsuenactus@gmail.com?subject=EDUCE Layihəsi haqqında&body=Salam Oğuz,%0D%0A%0D%0AEDUCE layihəsi haqqında sualım var...', '_blank')">
+                    <i class="fas fa-envelope"></i> Email Göndər
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Make essential functions globally available
+window.handleStartNow = handleStartNow;
+window.editProfile = editProfile;
+window.showCustomerProfileModal = showCustomerProfileModal;
+window.logoutCustomer = logoutCustomer;
+window.checkCustomerLogin = checkCustomerLogin;
+window.toggleProfile = toggleProfile;
+// Demo Video Modal Functions
+function showDemoModal() {
+    console.log('📹 Opening demo video modal');
+    const modal = document.getElementById('demoModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Add animation class
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+        
+        // Disable body scroll
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeDemoModal() {
+    console.log('📹 Closing demo video modal');
+    const modal = document.getElementById('demoModal');
+    const video = document.getElementById('demoVideo');
+    
+    if (modal) {
+        modal.classList.remove('show');
+        
+        // Stop video by reloading iframe src
+        if (video) {
+            const src = video.src;
+            video.src = '';
+            video.src = src.replace('autoplay=1', 'autoplay=0');
+        }
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+            // Re-enable body scroll
+            document.body.style.overflow = '';
+        }, 300);
+    }
+}
+
+// Close demo modal when clicking outside
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('demoModal');
+    if (e.target === modal) {
+        closeDemoModal();
+    }
+});
+
+// Close demo modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('demoModal');
+        if (modal && modal.style.display === 'flex') {
+            closeDemoModal();
+        }
+    }
+});
+
+window.showDemoModal = showDemoModal;
+window.closeDemoModal = closeDemoModal;
+window.showAboutModal = showAboutModal;
+window.showTeamModal = showTeamModal;
+window.showContactModal = showContactModal;
 
 // Initialize website when DOM is loaded
 document.addEventListener('DOMContentLoaded', initializeWebsite);

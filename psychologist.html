@@ -1463,7 +1463,7 @@ Format your response in a professional, easy-to-understand manner suitable for p
          */
         function loadPendingRequests() {
             const requestsTable = document.getElementById('requestsTable');
-            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const requests = JSON.parse(localStorage.getItem('educe_requests') || '[]');
             const currentPsychologist = JSON.parse(localStorage.getItem('EDUCE_user') || '{}');
             
             // Filter requests for current psychologist
@@ -1543,7 +1543,7 @@ Format your response in a professional, easy-to-understand manner suitable for p
          * Accept assessment request
          */
         function acceptRequest(requestId) {
-            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const requests = JSON.parse(localStorage.getItem('educe_requests') || '[]');
             const requestIndex = requests.findIndex(req => req.id === requestId);
             
             if (requestIndex === -1) return;
@@ -1553,7 +1553,7 @@ Format your response in a professional, easy-to-understand manner suitable for p
             // Update request status
             requests[requestIndex].status = 'accepted';
             requests[requestIndex].acceptedDate = new Date().toISOString();
-            localStorage.setItem('EDUCE_requests', JSON.stringify(requests));
+            localStorage.setItem('educe_requests', JSON.stringify(requests));
             
             // Update child status in customer data
             updateChildStatus(request.customerId, request.childId, 'accepted');
@@ -1562,7 +1562,9 @@ Format your response in a professional, easy-to-understand manner suitable for p
             loadPendingRequests();
             updatePsychologistStats();
             
-            showSuccessMessage(`Assessment request for ${request.childName} has been accepted!`);
+            showSuccessMessage(`✅ Assessment request for ${request.childName} has been accepted! 
+            
+The child can now take interactive psychological assessments. Parents will be notified of your approval.`);
         }
 
         /**
@@ -1571,7 +1573,7 @@ Format your response in a professional, easy-to-understand manner suitable for p
         function rejectRequest(requestId) {
             if (!confirm('Are you sure you want to reject this assessment request?')) return;
             
-            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const requests = JSON.parse(localStorage.getItem('educe_requests') || '[]');
             const requestIndex = requests.findIndex(req => req.id === requestId);
             
             if (requestIndex === -1) return;
@@ -1581,7 +1583,7 @@ Format your response in a professional, easy-to-understand manner suitable for p
             // Update request status
             requests[requestIndex].status = 'rejected';
             requests[requestIndex].rejectedDate = new Date().toISOString();
-            localStorage.setItem('EDUCE_requests', JSON.stringify(requests));
+            localStorage.setItem('educe_requests', JSON.stringify(requests));
             
             // Update child status in customer data
             updateChildStatus(request.customerId, request.childId, 'available');
@@ -1597,9 +1599,36 @@ Format your response in a professional, easy-to-understand manner suitable for p
          * Update child status in customer data
          */
         function updateChildStatus(customerId, childId, status) {
-            // This would typically be done via API, but for demo we'll simulate
-            // In a real app, you'd send this update to the server
-            console.log(`Updating child ${childId} status to ${status} for customer ${customerId}`);
+            // Update children data
+            const children = JSON.parse(localStorage.getItem('educe_children') || '[]');
+            const childIndex = children.findIndex(c => c.id === childId);
+            
+            if (childIndex !== -1) {
+                children[childIndex].status = status;
+                if (status === 'rejected') {
+                    // Clear psychologist assignment if rejected
+                    delete children[childIndex].psychologistId;
+                    delete children[childIndex].requestId;
+                }
+                localStorage.setItem('educe_children', JSON.stringify(children));
+                console.log(`✅ Updated child ${childId} status to ${status}`);
+            }
+            
+            // Also update customer data (for backward compatibility)
+            const customers = JSON.parse(localStorage.getItem('EDUCE_customers') || '[]');
+            const customer = customers.find(c => c.id === customerId || c.email === customerId);
+            
+            if (customer && customer.children) {
+                const customerChildIndex = customer.children.findIndex(c => c.id === childId);
+                if (customerChildIndex !== -1) {
+                    customer.children[customerChildIndex].status = status;
+                    if (status === 'rejected') {
+                        delete customer.children[customerChildIndex].psychologistId;
+                        delete customer.children[customerChildIndex].requestId;
+                    }
+                    localStorage.setItem('EDUCE_customers', JSON.stringify(customers));
+                }
+            }
         }
 
         /**
@@ -1743,13 +1772,13 @@ Format your response in a professional, easy-to-understand manner suitable for p
             if (!result) return;
             
             // Update child status to completed and mark report as ready
-            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const requests = JSON.parse(localStorage.getItem('educe_requests') || '[]');
             const request = requests.find(req => req.childId === childId);
             
             if (request) {
                 request.status = 'completed';
                 request.reportGeneratedDate = new Date().toISOString();
-                localStorage.setItem('EDUCE_requests', JSON.stringify(requests));
+                localStorage.setItem('educe_requests', JSON.stringify(requests));
             }
             
             // This would integrate with the existing AI report generation
@@ -1780,7 +1809,7 @@ Format your response in a professional, easy-to-understand manner suitable for p
          * Update psychologist dashboard statistics
          */
         function updatePsychologistStats() {
-            const requests = JSON.parse(localStorage.getItem('EDUCE_requests') || '[]');
+            const requests = JSON.parse(localStorage.getItem('educe_requests') || '[]');
             const gameResults = JSON.parse(localStorage.getItem('EDUCE_game_results') || '[]');
             const currentPsychologist = JSON.parse(localStorage.getItem('EDUCE_user') || '{}');
             

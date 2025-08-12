@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin & Psychologist Login - EDUCE</title>
+    <title data-translate="admin_login_title">Admin & Psychologist Login - EDUCE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -171,9 +171,32 @@
     </style>
 </head>
 <body class="login-body">
+    <!-- Language Selector -->
+    <div class="language-selector" style="position: fixed; top: 2rem; right: 2rem; z-index: 1000;">
+        <button class="language-btn" onclick="toggleLanguageMenu()" style="background: rgba(255,255,255,0.9); color: #4F46E5; border: 1px solid #4F46E5;">
+            <i class="fas fa-globe"></i>
+            <span id="currentLanguage">AZ</span>
+            <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="language-menu" id="languageMenu">
+            <button class="language-option" onclick="changeLanguage('az')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiMwMDkxREEiLz4KPHJlY3QgeT0iNiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiNGRjAwMDAiLz4KPHJlY3QgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSI2IiBmaWxsPSIjMDA5QjNBIi8+Cjwvc3ZnPgo=" alt="AZ" class="flag-icon">
+                Azərbaycan
+            </button>
+            <button class="language-option" onclick="changeLanguage('en')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjE4IiBmaWxsPSIjMDEyMTY5Ii8+CjxyZWN0IHk9IjIiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyIiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHk9IjYiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyIiBmaWxsPSIjRkYwMDAwIi8+CjxyZWN0IHk9IjEwIiB3aWR0aD0iMjQiIGhlaWdodD0iMiIgZmlsbD0iI0ZGRkZGRiIvPgo8cmVjdCB5PSIxNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjIiIGZpbGw9IiNGRjAwMDAiLz4KPC9zdmc+Cg==" alt="EN" class="flag-icon">
+                English
+            </button>
+            <button class="language-option" onclick="changeLanguage('ru')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAyNCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiNGRkZGRkYiLz4KPHJlY3QgeT0iNiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjYiIGZpbGw9IiMwMTIxNjkiLz4KPHJlY3QgeT0iMTIiIHdpZHRoPSIyNCIgaGVpZ2h0PSI2IiBmaWxsPSIjRkYwMDAwIi8+Cjwvc3ZnPgo=" alt="RU" class="flag-icon">
+                Русский
+            </button>
+        </div>
+    </div>
+
     <a href="index.html" class="back-link">
         <i class="fas fa-arrow-left"></i>
-        Back to Main Site
+        <span data-translate="back">Back to Main Site</span>
     </a>
     
     <div class="login-container">
@@ -182,34 +205,37 @@
                 <i class="fas fa-brain"></i>
                 <span>EDUCE</span>
             </div>
-            <h1 class="login-title">EDUCE Login</h1>
-            <p class="login-subtitle">Admin & Psychologist Access</p>
+            <h1 class="login-title" data-translate="admin_login_title">EDUCE Login</h1>
+            <p class="login-subtitle" data-translate="admin_login_title">Admin & Psychologist Access</p>
         </div>
         
         <div id="messageContainer"></div>
         
         <form class="login-form" id="loginForm">
             <div class="form-group">
-                <label for="email">Email Address</label>
+                <label for="email" data-translate="email_label">Email Address</label>
                 <input type="email" id="email" name="email" class="form-input" required>
             </div>
             
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password" data-translate="password_label">Password</label>
                 <input type="password" id="password" name="password" class="form-input" required>
             </div>
             
             <button type="submit" class="btn-login" id="loginBtn">
-                <i class="fas fa-sign-in-alt"></i> Login
+                <i class="fas fa-sign-in-alt"></i> 
+                <span data-translate="login_button">Login</span>
             </button>
         </form>
         
         <div class="login-links">
-            <p>Don't have an account? <a href="register.html" class="login-link">Register as Psychologist</a></p>
-            <p><a href="#" class="login-link" onclick="showForgotPassword()">Forgot Password?</a></p>
+            <p><span data-translate="register_link">Don't have an account?</span> <a href="register.html" class="login-link" data-translate="psychologist_register_title">Register as Psychologist</a></p>
+            <p><a href="#" class="login-link" onclick="showForgotPassword()" data-translate="forgot_password">Forgot Password?</a></p>
         </div>
     </div>
     
+    <!-- Include translation system -->
+    <script src="translations.js"></script>
     <script>
         // Check if already logged in
         if (localStorage.getItem('EDUCE_user')) {

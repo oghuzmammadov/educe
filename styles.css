@@ -1,4 +1,60 @@
 /* ========================================
+   Modal Animations
+   ======================================== */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+}
+
+/* ========================================
    CSS Variables - Color Palette & Fonts
    ======================================== */
 :root {
@@ -256,6 +312,15 @@ a:hover {
 }
 
 .nav-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.nav-links {
   display: flex;
   align-items: center;
   gap: var(--spacing-xl);
@@ -780,6 +845,55 @@ a:hover {
   
   .footer-links {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Demo Video Modal Styles */
+.demo-modal {
+    max-width: 900px;
+    width: 90%;
+}
+
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #000;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .demo-modal {
+        width: 95%;
+        margin: 20px auto;
+    }
+    
+    .video-container {
+        padding-bottom: 60%; /* Slightly different ratio for mobile */
+    }
+}
+
+/* Desktop Styles - Ensure language selector is visible */
+@media (min-width: 769px) {
+  .language-selector {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+  }
+  
+  .nav-menu .language-selector {
+    margin-left: auto;
   }
 }
 

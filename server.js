@@ -1,4 +1,4 @@
-const express = require('express');
+    const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -368,8 +368,14 @@ app.post('/api/auth/register', async (req, res) => {
         }
 
         // Check if user exists
-        const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-        if (existingUser.rows.length > 0) {
+        const existingUser = await new Promise((resolve, reject) => {
+            db.get('SELECT id FROM users WHERE email = ?', [email], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
+        
+        if (existingUser) {
             return res.status(400).json({ error: 'User already exists' });
         }
 
@@ -377,12 +383,24 @@ app.post('/api/auth/register', async (req, res) => {
         const passwordHash = await bcrypt.hash(password, 10);
 
         // Insert user
-        const result = await pool.query(
-            'INSERT INTO users (email, password_hash, name, role, phone) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, role, approved',
-            [email, passwordHash, name, role, phone]
-        );
+        const userId = await new Promise((resolve, reject) => {
+            db.run(
+                'INSERT INTO users (email, password_hash, name, role, phone) VALUES (?, ?, ?, ?, ?)',
+                [email, passwordHash, name, role, phone],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve(this.lastID);
+                }
+            );
+        });
 
-        const user = result.rows[0];
+        const user = {
+            id: userId,
+            email: email,
+            name: name,
+            role: role,
+            approved: role === 'psychologist' ? false : true
+        };
 
         // Generate JWT
         const token = jwt.sign(
@@ -420,41 +438,45 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         // Find user
-        const result = await pool.query(
-            'SELECT id, email, password_hash, name, role, approved FROM users WHERE email = $1',
-            [email]
+        db.get(
+            'SELECT id, email, password_hash, name, role, approved FROM users WHERE email = ?',
+            [email],
+            async (err, user) => {
+                if (err) {
+                    console.error('Login database error:', err);
+                    return res.status(500).json({ error: 'Database error' });
+                }
+
+                if (!user) {
+                    return res.status(401).json({ error: 'Invalid credentials' });
+                }
+
+                // Check password
+                const validPassword = await bcrypt.compare(password, user.password_hash);
+                if (!validPassword) {
+                    return res.status(401).json({ error: 'Invalid credentials' });
+                }
+
+                // Generate JWT
+                const token = jwt.sign(
+                    { id: user.id, email: user.email, role: user.role },
+                    config.jwt.secret,
+                    { expiresIn: config.jwt.expiresIn }
+                );
+
+                res.json({
+                    message: 'Login successful',
+                    user: {
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                        role: user.role,
+                        approved: user.approved
+                    },
+                    token
+                });
+            }
         );
-
-        if (result.rows.length === 0) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        const user = result.rows[0];
-
-        // Check password
-        const validPassword = await bcrypt.compare(password, user.password_hash);
-        if (!validPassword) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        // Generate JWT
-        const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
-            config.jwt.secret,
-            { expiresIn: config.jwt.expiresIn }
-        );
-
-        res.json({
-            message: 'Login successful',
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-                approved: user.approved
-            },
-            token
-        });
 
     } catch (error) {
         console.error('Login error:', error);
@@ -467,16 +489,22 @@ app.post('/api/auth/login', async (req, res) => {
 // Get current user profile
 app.get('/api/users/profile', authenticateToken, async (req, res) => {
     try {
-        const result = await pool.query(
-            'SELECT id, email, name, role, phone, approved, created_at FROM users WHERE id = $1',
-            [req.user.id]
+        db.get(
+            'SELECT id, email, name, role, phone, approved, created_at FROM users WHERE id = ?',
+            [req.user.id],
+            (err, row) => {
+                if (err) {
+                    console.error('Get profile error:', err);
+                    return res.status(500).json({ error: 'Failed to get profile' });
+                }
+
+                if (!row) {
+                    return res.status(404).json({ error: 'User not found' });
+                }
+
+                res.json(row);
+            }
         );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        res.json(result.rows[0]);
 
     } catch (error) {
         console.error('Get profile error:', error);
@@ -489,19 +517,34 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
     try {
         const { name, phone } = req.body;
         
-        const result = await pool.query(
-            'UPDATE users SET name = $1, phone = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, email, name, role, phone, approved',
-            [name, phone, req.user.id]
+        db.run(
+            'UPDATE users SET name = ?, phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [name, phone, req.user.id],
+            function(err) {
+                if (err) {
+                    console.error('Update profile error:', err);
+                    return res.status(500).json({ error: 'Failed to update profile' });
+                }
+
+                if (this.changes === 0) {
+                    return res.status(404).json({ error: 'User not found' });
+                }
+
+                // Get the updated user
+                db.get('SELECT id, email, name, role, phone, approved FROM users WHERE id = ?', 
+                    [req.user.id], (err, user) => {
+                    if (err) {
+                        console.error('Get updated user error:', err);
+                        return res.status(500).json({ error: 'Profile updated but failed to retrieve details' });
+                    }
+
+                    res.json({
+                        message: 'Profile updated successfully',
+                        user: user
+                    });
+                });
+            }
         );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        res.json({
-            message: 'Profile updated successfully',
-            user: result.rows[0]
-        });
 
     } catch (error) {
         console.error('Update profile error:', error);
@@ -510,6 +553,86 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
 });
 
 // ===== PSYCHOLOGIST ROUTES =====
+
+// Register new psychologist
+app.post('/api/psychologists/register', async (req, res) => {
+    try {
+        const {
+            firstName, lastName, email, password, phone,
+            licenseNumber, degree, experience, specialization,
+            institution, bio, address, city, country
+        } = req.body;
+
+        // Check if email already exists
+        db.get('SELECT id FROM users WHERE email = ?', [email], async (err, existingUser) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+
+            if (existingUser) {
+                return res.status(400).json({ error: 'Email already registered' });
+            }
+
+            try {
+                // Hash password
+                const bcrypt = require('bcryptjs');
+                const passwordHash = await bcrypt.hash(password, 10);
+                const name = `${firstName} ${lastName}`;
+
+                // Insert user first
+                db.run(
+                    'INSERT INTO users (email, password_hash, name, role, approved) VALUES (?, ?, ?, ?, ?)',
+                    [email, passwordHash, name, 'psychologist', 0],
+                    function(err) {
+                        if (err) {
+                            console.error('Insert user error:', err);
+                            return res.status(500).json({ error: 'Failed to register user' });
+                        }
+
+                        const userId = this.lastID;
+
+                        // Insert psychologist details
+                        const specializations = specialization ? specialization.split(',').map(s => s.trim()).join(',') : '';
+                        
+                        db.run(
+                            `INSERT INTO psychologists (
+                                user_id, phone, license_number, degree, experience, 
+                                specializations, institution, bio, address, city, country,
+                                approved, available, rating, completed_assessments
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                            [
+                                userId, phone, licenseNumber, degree, experience,
+                                specializations, institution, bio || '', address || '', city || '', country || '',
+                                0, 1, 0, 0
+                            ],
+                            function(err) {
+                                if (err) {
+                                    console.error('Insert psychologist error:', err);
+                                    return res.status(500).json({ error: 'Failed to register psychologist details' });
+                                }
+
+                                console.log(`✅ New psychologist registered: ${name} (${email})`);
+                                res.status(201).json({
+                                    message: 'Psychologist registration submitted successfully',
+                                    id: userId,
+                                    status: 'pending_approval'
+                                });
+                            }
+                        );
+                    }
+                );
+            } catch (hashError) {
+                console.error('Password hash error:', hashError);
+                res.status(500).json({ error: 'Registration failed' });
+            }
+        });
+
+    } catch (error) {
+        console.error('Register psychologist error:', error);
+        res.status(500).json({ error: 'Registration failed' });
+    }
+});
 
 // Get all psychologists (approved only for customers, all for admin)
 app.get('/api/psychologists', async (req, res) => {
@@ -557,19 +680,25 @@ app.get('/api/psychologists', async (req, res) => {
 // Get psychologist by ID
 app.get('/api/psychologists/:id', async (req, res) => {
     try {
-        const result = await pool.query(
+        db.get(
             `SELECT p.*, u.name, u.email 
              FROM psychologists p 
              JOIN users u ON p.user_id = u.id 
-             WHERE p.psychologist_id = $1`,
-            [req.params.id]
+             WHERE p.psychologist_id = ?`,
+            [req.params.id],
+            (err, row) => {
+                if (err) {
+                    console.error('Get psychologist error:', err);
+                    return res.status(500).json({ error: 'Failed to get psychologist' });
+                }
+
+                if (!row) {
+                    return res.status(404).json({ error: 'Psychologist not found' });
+                }
+
+                res.json(row);
+            }
         );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Psychologist not found' });
-        }
-
-        res.json(result.rows[0]);
 
     } catch (error) {
         console.error('Get psychologist error:', error);
@@ -582,22 +711,35 @@ app.put('/api/psychologists/profile', authenticateToken, requirePsychologist, as
     try {
         const { title, specializations, experience, description, available } = req.body;
         
-        const result = await pool.query(
+        db.run(
             `UPDATE psychologists 
-             SET title = $1, specializations = $2, experience = $3, description = $4, available = $5, updated_at = CURRENT_TIMESTAMP 
-             WHERE user_id = $6 
-             RETURNING *`,
-            [title, specializations, experience, description, available, req.user.id]
+             SET title = ?, specializations = ?, experience = ?, description = ?, available = ?, updated_at = CURRENT_TIMESTAMP 
+             WHERE user_id = ?`,
+            [title, specializations, experience, description, available, req.user.id],
+            function(err) {
+                if (err) {
+                    console.error('Update psychologist profile error:', err);
+                    return res.status(500).json({ error: 'Failed to update profile' });
+                }
+
+                if (this.changes === 0) {
+                    return res.status(404).json({ error: 'Psychologist profile not found' });
+                }
+
+                // Get updated profile
+                db.get('SELECT * FROM psychologists WHERE user_id = ?', [req.user.id], (err, psychologist) => {
+                    if (err) {
+                        console.error('Get updated psychologist profile error:', err);
+                        return res.status(500).json({ error: 'Profile updated but failed to retrieve details' });
+                    }
+
+                    res.json({
+                        message: 'Profile updated successfully',
+                        psychologist: psychologist
+                    });
+                });
+            }
         );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Psychologist profile not found' });
-        }
-
-        res.json({
-            message: 'Profile updated successfully',
-            psychologist: result.rows[0]
-        });
 
     } catch (error) {
         console.error('Update psychologist profile error:', error);
@@ -756,20 +898,55 @@ app.put('/api/admin/psychologists/:id/approval', authenticateToken, requireAdmin
 // Get admin statistics
 app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const stats = await Promise.all([
-            pool.query('SELECT COUNT(*) as total_users FROM users'),
-            pool.query('SELECT COUNT(*) as pending_psychologists FROM psychologists WHERE approved = false'),
-            pool.query('SELECT COUNT(*) as approved_psychologists FROM psychologists WHERE approved = true'),
-            pool.query('SELECT COUNT(*) as total_assessments FROM assessment_requests'),
-            pool.query('SELECT COUNT(*) as completed_assessments FROM assessment_requests WHERE status = \'completed\'')
-        ]);
+        const stats = {
+            totalUsers: 0,
+            pendingPsychologists: 0,
+            approvedPsychologists: 0,
+            totalAssessments: 0,
+            completedAssessments: 0
+        };
 
-        res.json({
-            totalUsers: parseInt(stats[0].rows[0].total_users),
-            pendingPsychologists: parseInt(stats[1].rows[0].pending_psychologists),
-            approvedPsychologists: parseInt(stats[2].rows[0].approved_psychologists),
-            totalAssessments: parseInt(stats[3].rows[0].total_assessments),
-            completedAssessments: parseInt(stats[4].rows[0].completed_assessments)
+        // Get all statistics sequentially (SQLite doesn't support Promise.all for queries)
+        db.get('SELECT COUNT(*) as count FROM users', [], (err, result) => {
+            if (err) {
+                console.error('Get total users stats error:', err);
+                return res.status(500).json({ error: 'Failed to get statistics' });
+            }
+            stats.totalUsers = result.count;
+
+            db.get('SELECT COUNT(*) as count FROM psychologists WHERE approved = 0', [], (err, result) => {
+                if (err) {
+                    console.error('Get pending psychologists stats error:', err);
+                    return res.status(500).json({ error: 'Failed to get statistics' });
+                }
+                stats.pendingPsychologists = result.count;
+
+                db.get('SELECT COUNT(*) as count FROM psychologists WHERE approved = 1', [], (err, result) => {
+                    if (err) {
+                        console.error('Get approved psychologists stats error:', err);
+                        return res.status(500).json({ error: 'Failed to get statistics' });
+                    }
+                    stats.approvedPsychologists = result.count;
+
+                    db.get('SELECT COUNT(*) as count FROM assessment_requests', [], (err, result) => {
+                        if (err) {
+                            console.error('Get total assessments stats error:', err);
+                            return res.status(500).json({ error: 'Failed to get statistics' });
+                        }
+                        stats.totalAssessments = result.count;
+
+                        db.get('SELECT COUNT(*) as count FROM assessment_requests WHERE status = "completed"', [], (err, result) => {
+                            if (err) {
+                                console.error('Get completed assessments stats error:', err);
+                                return res.status(500).json({ error: 'Failed to get statistics' });
+                            }
+                            stats.completedAssessments = result.count;
+
+                            res.json(stats);
+                        });
+                    });
+                });
+            });
         });
 
     } catch (error) {
@@ -780,16 +957,33 @@ app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) =>
 
 // ===== CHILDREN ROUTES =====
 
+// Get all children (admin only)
+app.get('/api/admin/children', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        db.all('SELECT * FROM children ORDER BY created_at DESC', [], (err, rows) => {
+            if (err) {
+                console.error('Get all children error:', err);
+                return res.status(500).json({ error: 'Failed to get children' });
+            }
+            res.json(rows);
+        });
+    } catch (error) {
+        console.error('Get all children error:', error);
+        res.status(500).json({ error: 'Failed to get children' });
+    }
+});
+
 // Get user's children
 app.get('/api/children', authenticateToken, async (req, res) => {
     try {
-        const result = await pool.query(
-            'SELECT * FROM children WHERE parent_id = $1 ORDER BY created_at DESC',
-            [req.user.id]
-        );
-
-        res.json(result.rows);
-
+        db.all('SELECT * FROM children WHERE parent_id = ? ORDER BY created_at DESC', 
+            [req.user.id], (err, rows) => {
+            if (err) {
+                console.error('Get children error:', err);
+                return res.status(500).json({ error: 'Failed to get children' });
+            }
+            res.json(rows);
+        });
     } catch (error) {
         console.error('Get children error:', error);
         res.status(500).json({ error: 'Failed to get children' });
@@ -799,21 +993,39 @@ app.get('/api/children', authenticateToken, async (req, res) => {
 // Add new child
 app.post('/api/children', authenticateToken, async (req, res) => {
     try {
-        const { name, age, gender, interests, notes } = req.body;
+        const { name, age, gender, interests, notes, grade } = req.body;
         
         if (!name || !age) {
             return res.status(400).json({ error: 'Name and age are required' });
         }
 
-        const result = await pool.query(
-            'INSERT INTO children (parent_id, name, age, gender, interests, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [req.user.id, name, age, gender, interests || [], notes]
-        );
+        const interestsJson = interests ? JSON.stringify(interests) : '[]';
+        
+        db.run(
+            'INSERT INTO children (parent_id, name, age, gender, interests, notes, grade, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [req.user.id, name, age, gender || '', interestsJson, notes || '', grade || '', 'pending'],
+            function(err) {
+                if (err) {
+                    console.error('Add child error:', err);
+                    return res.status(500).json({ error: 'Failed to add child' });
+                }
 
-        res.status(201).json({
-            message: 'Child added successfully',
-            child: result.rows[0]
-        });
+                // Get the inserted child
+                db.get('SELECT * FROM children WHERE id = ?', [this.lastID], (err, child) => {
+                    if (err) {
+                        console.error('Get inserted child error:', err);
+                        return res.status(500).json({ error: 'Child added but failed to retrieve details' });
+                    }
+
+                    console.log(`✅ New child added: ${name} (Age: ${age}) by user ${req.user.id}`);
+                    
+                    res.status(201).json({
+                        message: 'Child added successfully',
+                        child: child
+                    });
+                });
+            }
+        );
 
     } catch (error) {
         console.error('Add child error:', error);
